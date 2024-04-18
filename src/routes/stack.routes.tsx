@@ -13,6 +13,7 @@ export function StackRoutes() {
             <Screen
                 name='login'
                 component={Login}
+                options={{ headerShown: false}}
             />
              <Screen
                 name='home'
