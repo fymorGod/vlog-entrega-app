@@ -8,7 +8,6 @@ interface Props {
 
 export const Container = styled.View`
     flex: 1;
-    background-color: #cd0914;
     overflow: hidden;
     position: relative;
 `
@@ -36,6 +35,7 @@ export const TextSpan = styled.Text`
     margin-bottom: 20px;
     font-weight: 300;
     font-style: italic;
+    color: #170E49;
 `
 
 export const Text = styled.Text`
@@ -43,6 +43,7 @@ export const Text = styled.Text`
     margin-top: 40px;
     margin-bottom: 20px;
     margin-left: 40px;
+    color: #170E49;
 `
 
 export const ContainerVersion = styled.View`
@@ -63,4 +64,6 @@ export const TextSpanVersion = styled.Text`
     margin-bottom: 20px;
     font-weight: 300;
     font-style: italic;
+    color: #170E49;
+
 `

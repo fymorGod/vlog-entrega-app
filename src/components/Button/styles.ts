@@ -6,7 +6,7 @@ export const Container = styled.TouchableOpacity`
   margin: 0 auto;
   align-items: center;
   justify-content: center;
-  background-color: #020617;
+  background-color: #D7DF23;
   margin-bottom: 8px;
   border: none;
   border-radius: 4px;
@@ -14,5 +14,5 @@ export const Container = styled.TouchableOpacity`
 
 export const Title = styled.Text`
   font-size: 15px;
-  color: #FFFFFF;
+  color: #170E49;
 `;

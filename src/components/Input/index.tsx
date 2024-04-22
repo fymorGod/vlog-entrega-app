@@ -27,7 +27,7 @@ export type InputProps = TextInputProps & {
           <Feather
             name={icon}
             size={24}
-            color={(isFocused || isFilled) ? '#DC1637' : '#AEAEB3'}
+            color={(isFocused || isFilled) ? '#170E49' : '#AEAEB3'}
           />
         </IconContainer>
   
