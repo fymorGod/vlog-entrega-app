@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Keyboard, Modal, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { Camera, CameraType } from 'expo-camera';
 import { BarCodeScannerResult } from 'expo-barcode-scanner';
-import { useAuth } from '../../context/AuthContext';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
-import axios from 'axios';
+// import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 export function Home() {
-  const [type, setType] = useState(CameraType.back);
-  const [permission, requestPermission] = Camera.useCameraPermissions();
-  const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
-  const { storeData } = useAuth()
-  const [modalVisible, setModalVisible] = useState(false);
-  const [manualEntryValue, setManualEntryValue] = useState("");
+  const [ permission, requestPermission ] = Camera.useCameraPermissions();
+  const [ scannedBarcode, setScannedBarcode ] = useState<string>('');
+
+  const [ modalVisible, setModalVisible ] = useState(false);
+
+  const [ cameraVisible, setCameraVisible ] = useState(false);
+
+  const [ manualEntryValue, setManualEntryValue ] = useState("");
+
+  const cameraRef = useRef<Camera>(null);
+
+  const navigation = useNavigation();
 
   if (!permission) {
     return <View />;
@@ -27,16 +33,30 @@ export function Home() {
       </View>
     );
   }
-  
-  async function getValidateDataWithClient() {
-    const result = await axios.get(`localhost:3000/consulta?${scannedBarcode}&${storeData}`);
-    console.log(result)
+
+  const loadData = async (s:string) => {
+    console.log(s)
+    if (!s) {
+      console.error('O código de barras escaneado é vazio ou indefinido.');
+      return;
+    } else {
+      const response = await fetch(`http://192.168.4.59:3000/consulta?chaveAcesso=${s}&unidadeIE=102`);
+      console.log(response.status)
+      const data = await response.json();
+      console.log(data)
+      navigation.navigate("Dash");
+    }
   }
 
+  function handleScan({ data }: BarCodeScannerResult) {
+    if (data) {
+      setScannedBarcode(data);
+      setManualEntryValue(data);
 
-  function handleScan({ type, data }: BarCodeScannerResult) {
-    setScannedBarcode(data);
-    console.log(`Scanned barcode of type ${type} with data: ${data}`)
+      loadData(data); 
+    } else {
+      console.error('O código de barras escaneado é vazio ou indefinido.');
+    }
   }
 
   const dismissKeyboard = () => {
@@ -47,11 +67,10 @@ export function Home() {
     const textValid = manualEntryValue.replace(/\s/g, '');
 
     if (textValid.length == 44) {
-      setScannedBarcode(manualEntryValue)
-      getValidateDataWithClient()
-      setModalVisible(false);
+      setScannedBarcode(manualEntryValue);
+      // getValidateDataWithClient()
     } else {
-      setModalVisible(false)
+      setModalVisible(false);
     }
   }
 
@@ -60,21 +79,23 @@ export function Home() {
       <Camera
         onBarCodeScanned={handleScan}
         style={styles.camera}
-        type={type}
+        type={CameraType.back}
+        pictureSize={'1920x1080'}
+        ref={cameraRef}
+        ratio={'1:1'}
       />
       <View style={styles.barcodeDataContainer}>
-        <Text style={styles.barcodeText}>{scannedBarcode}</Text>
         <View style={styles.buttonContainer}>
-          <View style={{ width: '50%' }}>
+          <View style={{ width: '60%', marginLeft: 15 }}>
             <Button
-              title="Scan Again"
-              onPress={() => setScannedBarcode(null)}
+              title="Scanear Novamente"
+              onPress={() => setScannedBarcode('')}
             />
           </View>
-          <View style={{ width: '50%' }}>
+          <View style={{ width: '50%', marginRight: 5, marginLeft: -10 }}>
 
             <Button
-              title="Manual Entry"
+              title="Digitar Nota"
               onPress={() => {
                 setModalVisible(true)
               }}
@@ -103,10 +124,7 @@ export function Home() {
                 <View style={{ width: '50%' }}>
                   <Button
                     title="Enviar"
-                    onPress={() => {
-                      sendNFEManualmente()
-
-                    }}
+                    onPress={sendNFEManualmente}
                   />
                 </View>
                 <View style={{ width: '50%' }}>
@@ -139,15 +157,13 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     width: '100%',
-    paddingHorizontal: 20,
     marginTop: 20,
+    justifyContent: 'space-evenly'
   },
   barcodeDataContainer: {
     alignItems: 'center',
     marginBottom: 20,
-    marginTop: -30
   },
   barcodeText: {
     fontSize: 18,

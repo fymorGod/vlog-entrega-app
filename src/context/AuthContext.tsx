@@ -10,6 +10,7 @@ interface AuthProps {
     storeData?: string | null;
 }
 
+
 export const API_URL = 'https://api.apotiguar.com.br:64462'
 
 const TOKEN_KEY = 'my-jwt'
