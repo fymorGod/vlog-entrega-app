@@ -12,11 +12,10 @@ export type InputProps = TextInputProps & {
     const [isFocused, setIsFocused] = useState(false);
     const [isFilled, setIsFilled] = useState(false);
   
-    function handleInputFocus() {
+    const handleInputFocus = () => {
       setIsFocused(true);
     }
-  
-    function handleInputBlur() {
+    const handleInputBlur = () => {
       setIsFocused(false);
       setIsFilled(!!value)
     }

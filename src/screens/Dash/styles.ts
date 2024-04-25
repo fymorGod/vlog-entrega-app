@@ -1,5 +1,3 @@
-
-
 import styled from "styled-components/native";
 
 
@@ -25,11 +23,14 @@ export const CardInfo = styled.View`
 `
 export const TextInfo = styled.Text`
     font-weight: 600;
-`
-export const TextSpan = styled.Text`
     font-size: 18px;
+`
+export const TextSpan = styled.View`
+    width: 80%;
     margin-left: 20px;
     margin-top: 10px;
+    flex-direction: row; 
+    align-items: center;
 `
 export const ToggleCamera = styled.View`
     width: 80%;

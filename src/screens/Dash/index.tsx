@@ -5,17 +5,19 @@ import { AutoFocus, Camera, CameraType } from "expo-camera";
 import * as MediaLibrary from 'expo-media-library';
 import { Image, StyleSheet, Text, View } from "react-native";
 import { ButtonCamera } from "../../components/ButtonCamera";
+import { useAuth } from "../../context/AuthContext";
 
 export function Dash() {
     const [cameraStats, setCameraStats] = useState(false);
     const [image, setImage] = useState<string | null>(null);
-    
-    const cameraRef = useRef<Camera>(null); 
+    const { nfeData } = useAuth()
 
+    const cameraRef = useRef<Camera>(null);
     useEffect(() => {
         (async () => {
             await MediaLibrary.requestPermissionsAsync();
         })();
+
     }, []);
 
     function switchModeCamera() {
@@ -84,12 +86,36 @@ export function Dash() {
                         <Image source={{ uri: image }} style={styles.camera} />
                     ) : (
                         <>
+                        {
+                            nfeData ? 
                             <CardInfo>
                                 <TextSpan>
-                                    <TextInfo>Nome:</TextInfo>
+                                    <TextInfo>CPF: </TextInfo>
+                                    <Text>{nfeData?.cpf}</Text>
+                                </TextSpan>
+                                <TextSpan>
+                                    <TextInfo>Nome: </TextInfo>
+                                    <Text>{nfeData?.nome_cliente}</Text>
+                                </TextSpan>
+                                <TextSpan>
+                                    <TextInfo>NFE: </TextInfo>
+                                    <Text>{nfeData?.nfe}</Text>
+                                </TextSpan>
+                                <TextSpan>
+                                    <TextInfo>Nota Fiscal: </TextInfo>
+                                    <Text> {nfeData?.nota_fiscal} </Text>
+                                </TextSpan>
+                                <TextSpan>
+                                    <TextInfo>Número DAV: </TextInfo>
+                                    <Text>{nfeData?.numero_dav}</Text>
+                                </TextSpan>
+                                <TextSpan>
+                                    <TextInfo>Número Pré-Nota: </TextInfo>
+                                    <Text>{nfeData?.numero_pre_nota}</Text>
                                 </TextSpan>
                             </CardInfo>
-
+                        : null
+                        }
                             <ToggleCamera>
                                 <Button
                                     title="Câmera"

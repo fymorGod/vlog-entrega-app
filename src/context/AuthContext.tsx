@@ -3,11 +3,24 @@ import { createContext, useContext, useEffect, useState } from "react";
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store'
 
+type NfeProps = {
+    cpf: string;
+    nome_cliente: string;
+    nfe: string;
+    nota_fiscal: number;
+    numero_dav: number | null;
+    numero_pre_nota: number | null;
+}
+
 interface AuthProps {
     authState?: { token: string | null; authenticated: boolean | null };
     onLogin?: (mode: string, username: string, password: string) => Promise<any>;
     onLogout?: () => Promise<any>;
     storeData?: string | null;
+    // lojaInfo?: string | null;
+    // validate?: string | null;
+    onNfeData?: (value: string) => Promise<any>;
+    nfeData?: NfeProps
 }
 
 
@@ -32,6 +45,10 @@ export const AuthProvider = ({ children }: any) => {
     });
 
     const [ storeData, setStoreData ] = useState<string>('');
+    // const [ lojaInfo, setLojaInfo ] = useState<string>('');
+    // const [ validateAuth, setValidateAuth ] = useState<string>('');
+
+    const [ nfeData, setNfeData ] = useState();
 
     useEffect(() => {
         const loadToken = async () => {
@@ -47,7 +64,19 @@ export const AuthProvider = ({ children }: any) => {
             }
         }
         loadToken()
-    }, [])
+    }, []);
+
+    const loadData = async (s:string) => {
+        console.log(s)
+        if (!s) {
+          console.error('O código de barras escaneado é vazio ou indefinido.');
+          return;
+        } else {
+          const response = await fetch(`http://192.168.4.59:3000/consulta?chaveAcesso=${s}&unidadeIE=102`);
+          const data = await response.json();
+          setNfeData(data[0])
+        }
+      }
 
     const login = async (mode: string, username: string, password: string) => {
         try {
@@ -59,7 +88,8 @@ export const AuthProvider = ({ children }: any) => {
                     authenticated: true
                 });
                 setStoreData(result.data.data.store_code)
-
+                // setLojaInfo(result.data.data.store_name)
+                // setValidateAuth(result.data.data.permissions)
                 axios.defaults.headers.common['Authorization'] = `Bearer ${result.data.data.token}`;
 
                 await SecureStore.setItemAsync(TOKEN_KEY, result.data.data.token);
@@ -88,7 +118,9 @@ export const AuthProvider = ({ children }: any) => {
         onLogin: login,
         onLogout: logout,
         authState,
-        storeData
+        storeData,
+        onNfeData: loadData,
+        nfeData
     }
 
     return <AuthContext.Provider value={value}>
