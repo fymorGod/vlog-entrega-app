@@ -46,7 +46,7 @@ export function Home() {
     if (data) {
       setScannedBarcode(data);
       setManualEntryValue(data);
-
+      console.log(data);
       onNfeData!(data);
       navigation.navigate("Dash");
     } else {
@@ -64,6 +64,7 @@ export function Home() {
     if (textValid.length == 44) {
       setScannedBarcode(manualEntryValue);
       onNfeData!(scannedBarcode);
+      setModalVisible(false);
       navigation.navigate("Dash");
     } else {
       setModalVisible(false);
