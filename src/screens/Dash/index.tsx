@@ -10,16 +10,17 @@ import {
 import { Button } from "../../components/Button";
 import { useEffect, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
-import { Alert, FlatList, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
 
 import { launchImageLibrary } from 'react-native-image-picker'
 import { ButtonCamera } from "../../components/ButtonCameraNFE";
+import { Ionicons } from "@expo/vector-icons";
 
 
-const options={
+const options = {
   title: 'select image',
   type: 'library',
   options: {
@@ -59,7 +60,7 @@ export function Dash() {
         setImageUris(prevState => [...prevState, ...newImageUris]);
         console.log(imageUris)
       }
-      if ( imageUris.length >= 1) {
+      if (imageUris.length >= 1) {
         setCameraStats(true)
       }
     } catch (error) {
@@ -75,7 +76,7 @@ export function Dash() {
         allowsEditing: false,
         aspect: [4, 3],
         quality: 1,
-        allowsMultipleSelection: true, 
+        allowsMultipleSelection: true,
       });
 
       if (!result.canceled && result.assets[0].uri) {
@@ -86,16 +87,16 @@ export function Dash() {
             type: "image/jpg"
           })
         })
-      
-      const response = await axios.post('http://192.168.102.14:3031/upload', formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      }).then(data => {
-        console.log(data.data)
-        setImageUris([]);
-      })
-    }
+
+        const response = await axios.post('http://192.168.102.14:3031/upload', formData, {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        }).then(data => {
+          console.log(data.data)
+          setImageUris([]);
+        })
+      }
 
     } catch (error) {
       console.error('Erro ao abrir a galeria:', error);
@@ -116,19 +117,19 @@ export function Dash() {
       //     image: imageUris
       //   });
 
-        const response = await axios.post('http://192.168.102.14:3031/upload', {
-          "images": imageUris
-        }, 
+      const response = await axios.post('http://192.168.102.14:3031/upload', {
+        "images": imageUris
+      },
         {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         }
-      ).then(({data})=> console.log(data));;
-  
-        console.log('Imagens enviadas:', response);
-        Alert.alert('Fotos salvas!');
-        setCameraStats(false);
+      ).then(({ data }) => console.log(data));;
+
+      console.log('Imagens enviadas:', response);
+      Alert.alert('Fotos salvas!');
+      setCameraStats(false);
     } catch (error) {
       console.error('Erro ao enviar as imagens:', error);
       Alert.alert('Erro ao enviar as imagens.');
@@ -166,35 +167,48 @@ export function Dash() {
         </CardInfo>
       ) : null}
       <CardInfoImages>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+        <Text>Fotos capturadas</Text>
         <TextInfoImage>{imageUris.length}/10</TextInfoImage>
-        <FlatList
-        horizontal
-        data={imageUris}
-        renderItem={({ item, index }) => (
-            <Image source={{ uri: item }} style={styles.image} />
-        )}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.imagesContainer}
-        showsHorizontalScrollIndicator={false}
-      />
-      </CardInfoImages>
-       {
-        cameraStats ?  
-        <View style={{ width: "100%", flexDirection: 'column', height: 220, alignItems: 'center', justifyContent: 'center' }}>
-          <ToggleCamera>
-            <Button title="Selecionar fotos" onPress={openGallery} />
-          </ToggleCamera> 
         </View>
-        : 
-        <View style={{ width: "100%", flexDirection: 'column', height: 220, alignItems: 'center', justifyContent: 'center' }}>
+        <FlatList
+          horizontal
+          data={imageUris}
+          renderItem={({ item, index }) => (
+            <View style={{ position: 'relative' }}>
+              <Image source={{ uri: item }} style={styles.image} />
+              {index >= 2 && (
+                <TouchableOpacity
+                  style={styles.deleteIcon}
+                  onPress={() => removeImage(index)}
+                >
+                  <Ionicons name="trash" size={24} color="white" style={{marginRight: 10}}/>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.imagesContainer}
+          showsHorizontalScrollIndicator={false}
+        />
+      </CardInfoImages>
+      <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center'}}>
         <ToggleCamera>
           <ButtonCamera icon="camera" title="Canhoto da NF-E" onPress={openCamera} disabled={imageUris.length >= 1} />
         </ToggleCamera>
         <ToggleCamera>
-          <ButtonCamera icon="camera" title="Produtos" onPress={openCamera} disabled={imageUris.length < 1} />
+          <ButtonCamera icon="camera" title="Foto do Produto" onPress={openCamera} disabled={imageUris.length < 1} />
         </ToggleCamera>
+
+        {cameraStats && (
+          <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <ToggleCamera>
+              <ButtonCamera icon="export"  title="Selecione e Finalize" onPress={openGallery} disabled={imageUris.length < 1}/>
+            </ToggleCamera>
+          </View>
+        )}
+
       </View>
-       }
 
     </Container>
   );
@@ -216,6 +230,13 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+  },
+  deleteIcon: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    borderRadius: 50, 
+    padding: 5,
   },
   image: {
     width: 100,
