@@ -4,6 +4,8 @@ import {
   TextSpan,
   TextInfo,
   ToggleCamera,
+  CardInfoImages,
+  TextInfoImage,
 } from "./styles";
 import { Button } from "../../components/Button";
 import { useEffect, useState } from "react";
@@ -14,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
 
 import { launchImageLibrary } from 'react-native-image-picker'
+import { ButtonCamera } from "../../components/ButtonCameraNFE";
 
 
 const options={
@@ -53,8 +56,8 @@ export function Dash() {
       if (!result.canceled && result.assets[0].uri) {
         const newImageUris = result.assets.map(asset => asset.uri);
         await MediaLibrary.createAssetAsync(result.assets[0].uri);
-        setImageUris([...imageUris, ...newImageUris]);
-
+        setImageUris(prevState => [...prevState, ...newImageUris]);
+        console.log(imageUris)
       }
       if ( imageUris.length >= 1) {
         setCameraStats(true)
@@ -74,26 +77,26 @@ export function Dash() {
         quality: 1,
         allowsMultipleSelection: true, 
       });
-      console.log(result)
+
       if (!result.canceled && result.assets[0].uri) {
-      formData.append("images", {
-        uri: result.assets[0].uri,
-        name: "photo.png",
-        type: "image/jpg"
-      })
+        result.assets.forEach(asset => {
+          formData.append("images", {
+            uri: asset.uri,
+            name: "photo.png",
+            type: "image/jpg"
+          })
+        })
+      
       const response = await axios.post('http://192.168.102.14:3031/upload', formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         }
       }).then(data => {
         console.log(data.data)
+        setImageUris([]);
       })
     }
-      // if (!result.canceled && result.assets[0].uri) {
-      //   const newImageUris = result.assets.map(asset => asset.uri);
-      //   setImageUris([...imageUris, ...newImageUris]);
-      //   console.log(imageUris)
-      // }
+
     } catch (error) {
       console.error('Erro ao abrir a galeria:', error);
     }
@@ -162,8 +165,9 @@ export function Dash() {
           </TextSpan>
         </CardInfo>
       ) : null}
-      <>
-      <FlatList
+      <CardInfoImages>
+        <TextInfoImage>{imageUris.length}/10</TextInfoImage>
+        <FlatList
         horizontal
         data={imageUris}
         renderItem={({ item, index }) => (
@@ -173,18 +177,24 @@ export function Dash() {
         contentContainerStyle={styles.imagesContainer}
         showsHorizontalScrollIndicator={false}
       />
+      </CardInfoImages>
        {
         cameraStats ?  
+        <View style={{ width: "100%", flexDirection: 'column', height: 220, alignItems: 'center', justifyContent: 'center' }}>
+          <ToggleCamera>
+            <Button title="Selecionar fotos" onPress={openGallery} />
+          </ToggleCamera> 
+        </View>
+        : 
+        <View style={{ width: "100%", flexDirection: 'column', height: 220, alignItems: 'center', justifyContent: 'center' }}>
         <ToggleCamera>
-          <Button title="Selecionar fotos" onPress={openGallery} />
-        </ToggleCamera> 
-        : <ToggleCamera>
-        <Button title="Câmera" onPress={openCamera} />
-      </ToggleCamera>
+          <ButtonCamera icon="camera" title="Canhoto da NF-E" onPress={openCamera} disabled={imageUris.length >= 1} />
+        </ToggleCamera>
+        <ToggleCamera>
+          <ButtonCamera icon="camera" title="Produtos" onPress={openCamera} disabled={imageUris.length < 1} />
+        </ToggleCamera>
+      </View>
        }
-
-        
-      </>
 
     </Container>
   );
@@ -202,9 +212,7 @@ const styles = StyleSheet.create({
   },
   imagesContainer: {
     width: '100%',
-    alignItems: 'center',
-    marginTop: 20,
-    paddingBottom: 20,
+    marginTop: 10,
   },
   camera: {
     flex: 1,
@@ -213,6 +221,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     resizeMode: 'cover',
-    marginRight: 10
+    marginRight: 10,
+    borderRadius: 10
   },
 });

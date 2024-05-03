@@ -25,6 +25,20 @@ export const TextInfo = styled.Text`
     font-weight: 600;
     font-size: 18px;
 `
+export const TextInfoImage = styled.Text`
+    font-weight: 500;
+    font-size: 18px;
+    text-align:  right;
+    margin-right: 10px;
+    color: #262626;
+`
+export const CardInfoImages = styled.View`
+    width: 100%;
+    height: 200px;
+    justify-content: center;
+    padding: 10px;
+`
+
 export const TextSpan = styled.View`
     width: 80%;
     margin-left: 20px;
@@ -34,9 +48,6 @@ export const TextSpan = styled.View`
 `
 export const ToggleCamera = styled.View`
     width: 80%;
-    margin-top: 10px;
-    position: absolute;
     flex-direction: row;
-    bottom: 0;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 `
