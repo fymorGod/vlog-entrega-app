@@ -10,12 +10,12 @@ import {
 import { Button } from "../../components/Button";
 import { useEffect, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
-import { Alert, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
 
-import { launchImageLibrary } from 'react-native-image-picker'
+// import { launchImageLibrary } from 'react-native-image-picker'
 import { ButtonCamera } from "../../components/ButtonCameraNFE";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -35,7 +35,7 @@ export function Dash() {
   const [cameraStats, setCameraStats] = useState(false);
 
   const [imageUris, setImageUris] = useState<string[]>([]);
-
+  const [loading, setLoading] = useState<boolean>(false);
   const { nfeData } = useAuth();
 
   useEffect(() => {
@@ -54,22 +54,23 @@ export function Dash() {
         quality: 1,
       });
 
+      setLoading(true);
       if (!result.canceled && result.assets[0].uri) {
         const newImageUris = result.assets.map(asset => asset.uri);
-        await MediaLibrary.createAssetAsync(result.assets[0].uri);
-        setImageUris(prevState => [...prevState, ...newImageUris]);
-        console.log(imageUris)
+
+        setImageUris((prevImage) => [...prevImage, ...newImageUris]);
       }
       if (imageUris.length >= 1) {
         setCameraStats(true)
       }
+      setLoading(false);
     } catch (error) {
       console.error('Erro ao abrir a câmera:', error);
     }
   };
 
   const openGallery = async () => {
-    let formData = new FormData()
+    let formData = new FormData();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -80,12 +81,15 @@ export function Dash() {
       });
 
       if (!result.canceled && result.assets[0].uri) {
-        result.assets.forEach(asset => {
+        result.assets.forEach((asset, index) => {
+          const imageName = `photo_${index}.png`;
+
           formData.append("images", {
             uri: asset.uri,
-            name: "photo.png",
+            name: imageName,
             type: "image/jpg"
           })
+
         })
 
         const response = await axios.post('http://192.168.102.14:3031/upload', formData, {
@@ -111,25 +115,30 @@ export function Dash() {
 
   const finishOperation = async () => {
     try {
-      // const formData = new FormData();
-      // if (imageUris.length > 1) {
-      //   formData.append('images', {
-      //     image: imageUris
-      //   });
+      setLoading(true);
+      const formData = new FormData();
+      console.log(imageUris)
 
-      const response = await axios.post('http://192.168.102.14:3031/upload', {
-        "images": imageUris
-      },
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+      imageUris.forEach((uri, index) => {
+        const imageName = `photo_${index}.png`;
+        formData.append("images", {
+          uri: uri,
+          name: imageName,
+          type: "image/jpg"
+        });
+      });
+
+      const response = await axios.post('http://192.168.102.14:3031/upload', formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
         }
-      ).then(({ data }) => console.log(data));;
+      }).then(data => {
+        console.log(data.data)
+        setImageUris([]);
+        setLoading(false);
 
-      console.log('Imagens enviadas:', response);
+      })
       Alert.alert('Fotos salvas!');
-      setCameraStats(false);
     } catch (error) {
       console.error('Erro ao enviar as imagens:', error);
       Alert.alert('Erro ao enviar as imagens.');
@@ -138,78 +147,92 @@ export function Dash() {
 
   return (
     <Container>
-      {nfeData ? (
-        <CardInfo>
-          <TextSpan>
-            <TextInfo>CPF: </TextInfo>
-            <Text>{nfeData?.cpf}</Text>
-          </TextSpan>
-          <TextSpan>
-            <TextInfo>Nome: </TextInfo>
-            <Text>{nfeData?.nome_cliente}</Text>
-          </TextSpan>
-          <TextSpan>
-            <TextInfo>NFE: </TextInfo>
-            <Text>{nfeData?.nfe}</Text>
-          </TextSpan>
-          <TextSpan>
-            <TextInfo>Nota Fiscal: </TextInfo>
-            <Text>{nfeData?.nota_fiscal}</Text>
-          </TextSpan>
-          <TextSpan>
-            <TextInfo>Número DAV: </TextInfo>
-            <Text>{nfeData.numero_dav}</Text>
-          </TextSpan>
-          <TextSpan>
-            <TextInfo>Número Pré-Nota: </TextInfo>
-            <Text>{nfeData?.numero_pre_nota}</Text>
-          </TextSpan>
-        </CardInfo>
-      ) : null}
-      <CardInfoImages>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-        <Text>Fotos capturadas</Text>
-        <TextInfoImage>{imageUris.length}/10</TextInfoImage>
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
-        <FlatList
-          horizontal
-          data={imageUris}
-          renderItem={({ item, index }) => (
-            <View style={{ position: 'relative' }}>
-              <Image source={{ uri: item }} style={styles.image} />
-              {index >= 2 && (
-                <TouchableOpacity
-                  style={styles.deleteIcon}
-                  onPress={() => removeImage(index)}
-                >
-                  <Ionicons name="trash" size={24} color="white" style={{marginRight: 10}}/>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-          keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={styles.imagesContainer}
-          showsHorizontalScrollIndicator={false}
-        />
-      </CardInfoImages>
-      <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center'}}>
-        <ToggleCamera>
-          <ButtonCamera icon="camera" title="Canhoto da NF-E" onPress={openCamera} disabled={imageUris.length >= 1} />
-        </ToggleCamera>
-        <ToggleCamera>
-          <ButtonCamera icon="camera" title="Foto do Produto" onPress={openCamera} disabled={imageUris.length < 1} />
-        </ToggleCamera>
+      )}
+      <>
 
-        {cameraStats && (
-          <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <ToggleCamera>
-              <ButtonCamera icon="export"  title="Selecione e Finalize" onPress={openGallery} disabled={imageUris.length < 1}/>
-            </ToggleCamera>
-          </View>
-        )}
+        {(nfeData && !loading) ? (
+          <CardInfo>
+            <TextSpan>
+              <TextInfo>CPF: </TextInfo>
+              <Text>{nfeData?.cpf}</Text>
+            </TextSpan>
+            <TextSpan>
+              <TextInfo>Nome: </TextInfo>
+              <Text>{nfeData?.nome_cliente}</Text>
+            </TextSpan>
+            <TextSpan>
+              <TextInfo>NFE: </TextInfo>
+              <Text>{nfeData?.nfe}</Text>
+            </TextSpan>
+            <TextSpan>
+              <TextInfo>Nota Fiscal: </TextInfo>
+              <Text>{nfeData?.nota_fiscal}</Text>
+            </TextSpan>
+            <TextSpan>
+              <TextInfo>Número DAV: </TextInfo>
+              <Text>{nfeData.numero_dav}</Text>
+            </TextSpan>
+            <TextSpan>
+              <TextInfo>Número Pré-Nota: </TextInfo>
+              <Text>{nfeData?.numero_pre_nota}</Text>
+            </TextSpan>
+          </CardInfo>
+        ) : null}
+        {
+          !loading && (
+            <>
+              <CardInfoImages>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text>Fotos capturadas</Text>
+                  <TextInfoImage>{imageUris.length}/10</TextInfoImage>
+                </View>
+                <FlatList
+                  horizontal
+                  data={imageUris}
+                  renderItem={({ item, index }) => (
+                    <View style={{ position: 'relative' }}>
+                      <Image source={{ uri: item }} style={styles.image} />
+                      {index >= 2 && (
+                        <TouchableOpacity
+                          style={styles.deleteIcon}
+                          onPress={() => removeImage(index)}
+                        >
+                          <Ionicons name="trash" size={24} color="white" style={{ marginRight: 10 }} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                  keyExtractor={(item, index) => index.toString()}
+                  contentContainerStyle={styles.imagesContainer}
+                  showsHorizontalScrollIndicator={false}
+                />
+              </CardInfoImages>
+              <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center' }}>
+                <ToggleCamera>
+                  <ButtonCamera icon="camera" title="Canhoto da NF-E" onPress={() => openCamera()} disabled={imageUris.length >= 1} />
+                </ToggleCamera>
+                <ToggleCamera>
+                  <ButtonCamera icon="camera" title="Foto do Produto" onPress={() => openCamera()} disabled={imageUris.length < 1} />
+                </ToggleCamera>
 
-      </View>
+                {cameraStats && (
+                  <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <ToggleCamera>
+                      <ButtonCamera icon="export" title="Selecione e Finalize" onPress={finishOperation} disabled={imageUris.length < 1} />
+                    </ToggleCamera>
+                  </View>
+                )}
 
+              </View>
+            </>
+          )
+        }
+
+      </>
     </Container>
   );
 }
@@ -224,6 +247,12 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   imagesContainer: {
     width: '100%',
     marginTop: 10,
@@ -235,7 +264,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 5,
     right: 5,
-    borderRadius: 50, 
+    borderRadius: 50,
     padding: 5,
   },
   image: {

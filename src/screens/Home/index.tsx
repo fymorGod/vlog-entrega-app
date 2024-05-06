@@ -1,5 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Modal,
   StyleSheet,
@@ -17,16 +18,22 @@ import { useAuth } from "../../context/AuthContext";
 export function Home() {
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
-
   const [modalVisible, setModalVisible] = useState(false);
-
   const [manualEntryValue, setManualEntryValue] = useState("");
-
   const cameraRef = useRef<Camera>(null);
-
   const { onNfeData } = useAuth();
   const navigation = useNavigation();
+  const [loading, setLoading] = useState<boolean>(false);
+ 
+  const [cameraStats, setCameraStats] = useState(true);
 
+  useEffect(() => {
+    return () => {
+      if (permission && permission.granted && cameraRef.current) {
+        cameraRef.current.pausePreview();
+      }
+    };
+  }, [permission]);
   if (!permission) {
     return <View />;
   }
@@ -47,6 +54,7 @@ export function Home() {
       setScannedBarcode(data);
       setManualEntryValue(data);
       console.log(data);
+      setLoading(true)
       onNfeData!(data);
       navigation.navigate("Dash");
     } else {
@@ -65,6 +73,8 @@ export function Home() {
       setScannedBarcode(manualEntryValue);
       onNfeData!(scannedBarcode);
       setModalVisible(false);
+      setLoading(false)
+      setCameraStats(false)
       navigation.navigate("Dash");
     } else {
       setModalVisible(false);
@@ -73,14 +83,23 @@ export function Home() {
 
   return (
     <View style={styles.container}>
+        {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      )}
+    {
+      cameraStats ? 
       <Camera
-        onBarCodeScanned={handleScan}
-        style={styles.camera}
-        type={CameraType.back}
-        pictureSize={"1920x1080"}
-        ref={cameraRef}
-        ratio={"1:1"}
-      />
+      onBarCodeScanned={handleScan}
+      style={styles.camera}
+      type={CameraType.back}
+      pictureSize={"1920x1080"}
+      ref={cameraRef}
+      ratio={"1:1"}
+    />
+    : null
+    }
       <View style={styles.barcodeDataContainer}>
         <View style={styles.buttonContainer}>
           <View style={{ width: "60%", marginLeft: 15 }}>
@@ -146,6 +165,12 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
     width: "100%",
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonContainer: {
     flexDirection: "row",

@@ -5,6 +5,7 @@ import { Login } from "./src/screens/Login";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Button, StyleSheet, View } from "react-native";
 import { Dash } from "./src/screens/Dash";
+import { InitScanner } from "./src/screens/InitScanner";
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,18 @@ export const Layout = () => {
       <Stack.Navigator>
         {authState?.authenticated ? (
           <>
+           <Stack.Screen
+              name="InitS"
+              component={InitScanner}
+              options={{
+                headerRight: () => (
+                  <View style={styles.buttonContainer}>
+                    <Button onPress={onLogout} title="Sair" color="#170E49" />
+                  </View>
+                ),
+              }}
+            ></Stack.Screen>
+
             <Stack.Screen
               name="Home"
               component={Home}
