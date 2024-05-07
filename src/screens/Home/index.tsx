@@ -34,6 +34,7 @@ export function Home() {
       }
     };
   }, [permission]);
+  
   if (!permission) {
     return <View />;
   }
@@ -53,7 +54,6 @@ export function Home() {
     if (data) {
       setScannedBarcode(data);
       setManualEntryValue(data);
-      console.log(data);
       setLoading(true)
       onNfeData!(data);
       navigation.navigate("Dash");
@@ -85,7 +85,7 @@ export function Home() {
     <View style={styles.container}>
         {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#0a0a0a" />
         </View>
       )}
     {
@@ -186,7 +186,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 20,
   },
-
   centeredView: {
     flex: 1,
     justifyContent: "center",
