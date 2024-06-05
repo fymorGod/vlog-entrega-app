@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Keyboard,
   Modal,
   StyleSheet,
@@ -8,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { Camera, CameraType } from "expo-camera";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
@@ -16,12 +17,12 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 
 export function Home() {
-  const [permission, requestPermission] = Camera.useCameraPermissions();
+  const [permission, requestPermission] = useCameraPermissions();
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
   const [modalVisible, setModalVisible] = useState(false);
   const [manualEntryValue, setManualEntryValue] = useState("");
-  const cameraRef = useRef<Camera>(null);
-  const { onNfeData } = useAuth();
+  const cameraRef = useRef<CameraView>(null);
+  const { onNfeData, nfeData } = useAuth();
   const navigation = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
  
@@ -30,7 +31,7 @@ export function Home() {
   useEffect(() => {
     return () => {
       if (permission && permission.granted && cameraRef.current) {
-        cameraRef.current.pausePreview();
+        cameraRef.current._cameraRef.current?.stopRecording;
       }
     };
   }, [permission]);
@@ -45,10 +46,14 @@ export function Home() {
         <Text style={{ textAlign: "center" }}>
           We need your permission to show the camera
         </Text>
-        <Button onPress={requestPermission} title="grant permission" />
+        <Button onPress={requestPermission} title="Permitir de acesso a câmera." />
       </View>
     );
   }
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
 
   function handleScan({ data }: BarCodeScannerResult) {
     if (data) {
@@ -56,26 +61,33 @@ export function Home() {
       setManualEntryValue(data);
       setLoading(true)
       onNfeData!(data);
-      navigation.navigate("Dash");
+      if (!nfeData?.romaneio) {
+        navigation.navigate("Dash");
+      } else {
+        Alert.alert("NFe já cadastrada!")
+      }
     } else {
       console.error("O código de barras escaneado é vazio ou indefinido.");
     }
   }
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
 
   function sendNFEManualmente() {
     const textValid = manualEntryValue.replace(/\s/g, "");
 
     if (textValid.length == 44) {
+      setLoading(true)
       setScannedBarcode(manualEntryValue);
       onNfeData!(scannedBarcode);
       setModalVisible(false);
-      setLoading(false)
       setCameraStats(false)
-      navigation.navigate("Dash");
+      if (!nfeData?.romaneio) {
+        setLoading(false)
+        navigation.navigate("Dash");
+      } else {
+        setLoading(false)
+        Alert.alert("NFe já cadastrada!")
+      }
     } else {
       setModalVisible(false);
     }
@@ -90,13 +102,11 @@ export function Home() {
       )}
     {
       cameraStats ? 
-      <Camera
-      onBarCodeScanned={handleScan}
+      <CameraView
+      onBarcodeScanned={handleScan}
       style={styles.camera}
-      type={CameraType.back}
       pictureSize={"1920x1080"}
       ref={cameraRef}
-      ratio={"1:1"}
     />
     : null
     }

@@ -4,12 +4,17 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 type NfeProps = {
-  cpf: string;
-  nome_cliente: string;
+  clienteE: {
+    id: number;
+    cpfCliente: string;
+    nome: string;
+  }
   nfe: string;
-  nota_fiscal: number;
-  numero_dav: number | null;
-  numero_pre_nota: number | null;
+  notaFiscal: number | null;
+  numeroDav: string | null;
+  numeroPreNota: string | null;
+  romaneio: number | null;
+  status: string | null;
 };
 
 interface AuthProps {
@@ -17,6 +22,7 @@ interface AuthProps {
   onLogin?: (mode: string, username: string, password: string) => Promise<any>;
   onLogout?: () => Promise<any>;
   storeData?: string | null;
+  username?: string | null;
   lojaInfo?: string | null;
   onNfeData?: (value: string) => Promise<any>;
   nfeData?: NfeProps;
@@ -25,7 +31,8 @@ interface AuthProps {
 export const API_URL = "https://api.apotiguar.com.br:64462";
 
 const TOKEN_KEY = "my-jwt";
-const URL_VALIDATE_DATA_SCANNER = "http://192.168.102.14:3000/consulta?";
+const URL_VALIDATE_DATA_SCANNER = "http://192.168.102.14:8084/api/v1/nfe/data-consumer?";
+
 const AuthContext = createContext<AuthProps>({});
 
 export const useAuth = () => {
@@ -36,12 +43,15 @@ export const AuthProvider = ({ children }: any) => {
   const [authState, setAuthState] = useState<{
     token: string | null;
     authenticated: boolean | null;
+    storeData: string | null;
   }>({
     token: null,
     authenticated: null,
+    storeData: null,
   });
 
   const [storeData, setStoreData] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [lojaInfo, setLojaInfo] = useState<string>("");
 
   const [nfeData, setNfeData] = useState();
@@ -56,6 +66,7 @@ export const AuthProvider = ({ children }: any) => {
         setAuthState({
           token: token,
           authenticated: true,
+          storeData: storeData,
         });
       }
     };
@@ -70,6 +81,7 @@ export const AuthProvider = ({ children }: any) => {
       const response = await fetch(
         URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${s}&unidadeIE=102`,
       );
+      console.log(response)
       const data = await response.json();
       setNfeData(data[0]);
     }
@@ -99,10 +111,12 @@ export const AuthProvider = ({ children }: any) => {
         setAuthState({
           token: result.data.data.token,
           authenticated: true,
+          storeData: result.data.data.store_code
         });
 
         setStoreData(result.data.data.store_code);
         setLojaInfo(result.data.data.store_name);
+        setUsername(result.data.data.username)
 
         axios.defaults.headers.common["Authorization"] =
           `Bearer ${result.data.data.token}`;
@@ -138,6 +152,7 @@ export const AuthProvider = ({ children }: any) => {
     setAuthState({
       token: null,
       authenticated: false,
+      storeData: null,
     });
   };
 
@@ -146,6 +161,7 @@ export const AuthProvider = ({ children }: any) => {
     onLogout: logout,
     authState,
     storeData,
+    username,
     onNfeData: loadData,
     nfeData,
     lojaInfo,

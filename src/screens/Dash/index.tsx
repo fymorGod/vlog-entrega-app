@@ -7,36 +7,37 @@ import {
   CardInfoImages,
   TextInfoImage,
 } from "./styles";
-import { Button } from "../../components/Button";
 import { useEffect, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
 import { ActivityIndicator, Alert, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
-
-// import { launchImageLibrary } from 'react-native-image-picker'
 import { ButtonCamera } from "../../components/ButtonCameraNFE";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { ButtonFinish } from "../../components/ButtonFinish";
 
-
-const options = {
-  title: 'select image',
-  type: 'library',
-  options: {
-    maxHeight: 200,
-    maxWidth: 200,
-    selectionLimit: 1,
-    mediaType: 'photo',
-    includeBase64: false
-  }
+interface FileUploadData {
+  store: string;
+  cpf: string;
+  client: string;
+  key_nf: string;
+  nf: string;
+  dav: string;
+  pre_nota: string;
+  status: number;
+  user_log: string;
+  photo: string[]; // Se `imageUris` é um array de strings
 }
+
 export function Dash() {
   const [cameraStats, setCameraStats] = useState(false);
 
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { nfeData } = useAuth();
+  const { nfeData, username, storeData, authState } = useAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -45,6 +46,7 @@ export function Dash() {
   }, []);
 
   const openCamera = async () => {
+    setLoading(true);
     try {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -54,7 +56,6 @@ export function Dash() {
         quality: 1,
       });
 
-      setLoading(true);
       if (!result.canceled && result.assets[0].uri) {
         const newImageUris = result.assets.map(asset => asset.uri);
 
@@ -69,81 +70,85 @@ export function Dash() {
     }
   };
 
-  const openGallery = async () => {
-    let formData = new FormData();
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        aspect: [4, 3],
-        quality: 1,
-        allowsMultipleSelection: true,
-      });
-
-      if (!result.canceled && result.assets[0].uri) {
-        result.assets.forEach((asset, index) => {
-          const imageName = `photo_${index}.png`;
-
-          formData.append("images", {
-            uri: asset.uri,
-            name: imageName,
-            type: "image/jpg"
-          })
-
-        })
-
-        const response = await axios.post('http://192.168.102.14:3031/upload', formData, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }).then(data => {
-          console.log(data.data)
-          setImageUris([]);
-        })
-      }
-
-    } catch (error) {
-      console.error('Erro ao abrir a galeria:', error);
-    }
-  };
-
+ 
   const removeImage = (index: number) => {
     const newImageUris = [...imageUris];
     newImageUris.splice(index, 1);
     setImageUris(newImageUris);
   };
 
+  const createCustomerData = async () => {
+    const data = {
+      store: storeData,
+      cpf: nfeData.clienteE.cpfCliente,
+      client: nfeData.clienteE.nome,
+      key_nf: nfeData.nfe,
+      nf: nfeData.notaFiscal,
+      dav: nfeData.numeroDav,
+      pre_nota: nfeData.numeroPreNota,
+      status: 1,
+      user_log: username,
+  };
+    try {
+      const response = await axios.post<FileUploadData>('http://192.168.102.14:8080/api/v1/create-customer',data, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      response.status == 201 ? true : false;
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const finishOperation = async () => {
     try {
-      setLoading(true);
-      const formData = new FormData();
-      console.log(imageUris)
+        setLoading(true);
+        const formData = new FormData();
+        const currentDate = new Date();
 
-      imageUris.forEach((uri, index) => {
-        const imageName = `photo_${index}.png`;
-        formData.append("images", {
-          uri: uri,
-          name: imageName,
-          type: "image/jpg"
+        imageUris.forEach((uri, index) => {
+            const imageName = `photo_${currentDate.getTime()}_${index}.png`;
+            const imageFile = {
+                uri: uri,
+                name: imageName,
+                type: 'image/jpeg'
+            };
+            formData.append("file", imageFile);
         });
-      });
 
-      const response = await axios.post('http://192.168.102.14:3031/upload', formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
+        formData.append('store', storeData);
+        formData.append('cpf', nfeData.clienteE.cpfCliente);
+        formData.append('client', nfeData.clienteE.nome);
+        formData.append('key_nf', nfeData.nfe);
+        formData.append('nf', nfeData.notaFiscal);
+        formData.append('dav', nfeData.numeroDav);
+        formData.append('pre_nota', nfeData.numeroPreNota);
+        formData.append('status', '1'); // assuming status is a string
+        formData.append('user_log', username);
+
+        const response = await axios.post('http://192.168.102.14:8084/api/v1/create-customer', formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        });
+        console.log(response.status)
+        if (response.status === 201) {
+            console.log(response.data);
+            setImageUris([]);
+            setLoading(false);
+            Alert.alert('Fotos salvas!');
+            navigation.navigate('ScannerNFe');
+        } else {
+            console.log("Error no envio de imagens");
+            setLoading(false);
         }
-      }).then(data => {
-        console.log(data.data)
-        setImageUris([]);
-        setLoading(false);
-
-      })
-      Alert.alert('Fotos salvas!');
     } catch (error) {
-      console.error('Erro ao enviar as imagens:', error);
-      Alert.alert('Erro ao enviar as imagens.');
+        console.error('Erro ao enviar as imagens:', error);
+        Alert.alert('Erro ao enviar as imagens.');
     }
-  };
+};
+
 
   return (
     <Container>
@@ -158,30 +163,33 @@ export function Dash() {
           <CardInfo>
             <TextSpan>
               <TextInfo>CPF: </TextInfo>
-              <Text>{nfeData?.cpf}</Text>
+              <Text style={{ fontSize: 18}}>{nfeData?.clienteE.cpfCliente}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nome: </TextInfo>
-              <Text>{nfeData?.nome_cliente}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData?.clienteE.nome}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>NFE: </TextInfo>
-              <Text>{nfeData?.nfe}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData?.nfe}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nota Fiscal: </TextInfo>
-              <Text>{nfeData?.nota_fiscal}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData?.notaFiscal}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número DAV: </TextInfo>
-              <Text>{nfeData.numero_dav}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData.numeroDav}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número Pré-Nota: </TextInfo>
-              <Text>{nfeData?.numero_pre_nota}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData?.numeroPreNota}</Text>
             </TextSpan>
           </CardInfo>
-        ) : null}
+        ) : <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+        }
         {
           !loading && (
             <>
@@ -190,26 +198,29 @@ export function Dash() {
                   <Text>Fotos capturadas</Text>
                   <TextInfoImage>{imageUris.length}/10</TextInfoImage>
                 </View>
+
                 <FlatList
-                  horizontal
-                  data={imageUris}
-                  renderItem={({ item, index }) => (
-                    <View style={{ position: 'relative' }}>
-                      <Image source={{ uri: item }} style={styles.image} />
-                      {index >= 2 && (
-                        <TouchableOpacity
-                          style={styles.deleteIcon}
-                          onPress={() => removeImage(index)}
-                        >
-                          <Ionicons name="trash" size={24} color="white" style={{ marginRight: 10 }} />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                  contentContainerStyle={styles.imagesContainer}
-                  showsHorizontalScrollIndicator={false}
-                />
+                    horizontal
+                    keyExtractor={(item, index) => index.toString()}
+                    data={imageUris}
+                    renderItem={({ item, index }) => (
+                      <View style={{ width: 100, position: 'relative' }}>
+                        <Image source={{ uri: item }} style={styles.image} />
+                        {index >= 2 && (
+                          <TouchableOpacity
+                            style={styles.deleteIcon}
+                            onPress={() => removeImage(index)}
+                          >
+                            <Ionicons name="trash" size={24} color="white" style={{ marginRight: 10 }} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    )}
+                    
+                    contentContainerStyle={styles.imagesContainer}
+                    showsHorizontalScrollIndicator={false}
+                  />
+        
               </CardInfoImages>
               <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center' }}>
                 <ToggleCamera>
@@ -222,7 +233,7 @@ export function Dash() {
                 {cameraStats && (
                   <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <ToggleCamera>
-                      <ButtonCamera icon="export" title="Selecione e Finalize" onPress={finishOperation} disabled={imageUris.length < 1} />
+                      <ButtonFinish icon="export" title="Finalize" onPress={finishOperation} disabled={imageUris.length < 1} />
                     </ToggleCamera>
                   </View>
                 )}
@@ -254,7 +265,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   imagesContainer: {
-    width: '100%',
+    gap:10,
     marginTop: 10,
   },
   camera: {

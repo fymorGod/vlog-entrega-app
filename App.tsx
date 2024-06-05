@@ -26,7 +26,7 @@ export const Layout = () => {
         {authState?.authenticated ? (
           <>
            <Stack.Screen
-              name="InitS"
+              name="ScannerNFe"
               component={InitScanner}
               options={{
                 headerRight: () => (

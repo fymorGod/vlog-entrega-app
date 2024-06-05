@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
 
 export function Login() {
-    const [mode, setMode] = useState('login')
+    const mode = 'login'
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
 
@@ -24,46 +24,47 @@ export function Login() {
             alert(result.msg)
         }
     }
+
     const dismissKeyboard = () => {
         Keyboard.dismiss();
-    }; 
+    };
+    
     return (
-        <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={true}>
             <TouchableWithoutFeedback onPress={dismissKeyboard}>
                 <LinearGradient
-                colors={['#cd0914', '#871015']}
-                style={{ flex: 1}} >
-                <Container>
-                    <ContainerLogo>
-                        <Image style={styles.tineLogo} source={require('../../../assets/logo.png')} />
-                    </ContainerLogo>
-                    <ContainerForm>
-                        <Text>Login</Text>
-                        <TextSpan>Bem vindo ao sistema de entregas - Vlog</TextSpan>
-                        <Input
-                            icon="mail"
-                            placeholder="Username"
-                            autoCapitalize='none'
-                            onChangeText={(text: string) => setUsername(text)}
-                            value={username}
-                        />
-                        <Input
-                            icon="lock"
-                            placeholder="Senha"
-                            secureTextEntry
-                            onChangeText={(text: string) => setPassword(text)}
-                            value={password}
-                        />
-                        <Button
-                            title="Entrar"
-                            onPress={login}
-                        />
-                    </ContainerForm>
-                    <ContainerVersion>
-                        <TextSpanVersion>v.1.0.2</TextSpanVersion>
-                    </ContainerVersion>
-
-                </Container>
+                    colors={['#cd0914', '#871015']}
+                    style={{ flex: 1 }} >
+                    <Container>
+                        <ContainerLogo>
+                            <Image style={styles.tineLogo} source={require('../../../assets/logo.png')} />
+                        </ContainerLogo>
+                        <ContainerForm>
+                            <Text>Vlog</Text>
+                            <TextSpan>Bem vindo ao sistema</TextSpan>
+                            <Input
+                                icon="mail"
+                                placeholder="Username"
+                                autoCapitalize='none'
+                                onChangeText={(text: string) => setUsername(text)}
+                                value={username}
+                            />
+                            <Input
+                                icon="lock"
+                                placeholder="Senha"
+                                secureTextEntry
+                                onChangeText={(text: string) => setPassword(text)}
+                                value={password}
+                            />
+                            <Button
+                                title="Entrar"
+                                onPress={login}
+                            />
+                        </ContainerForm>
+                        <ContainerVersion>
+                            <TextSpanVersion>v.1.0.2</TextSpanVersion>
+                        </ContainerVersion>
+                    </Container>
                 </LinearGradient>
             </TouchableWithoutFeedback>
         </ScrollView>
@@ -73,11 +74,6 @@ export function Login() {
 const styles = StyleSheet.create({
     tineLogo: {
         resizeMode: 'contain',
-    },
-    textPorFavor: {
-        color: 'red',
-        marginTop: 10,
-        textAlign: 'center',
     },
     scrollViewContent: {
         flexGrow: 1,

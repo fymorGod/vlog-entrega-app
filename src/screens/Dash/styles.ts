@@ -11,7 +11,7 @@ export const Container = styled.View`
 
 export const CardInfo = styled.View`
     width: 100%;
-    height: 350px;
+    height: 260px;
     margin: 0 auto;
     padding: 10px 10px;
     background-color: #f2f2f2;
@@ -22,7 +22,7 @@ export const CardInfo = styled.View`
     align-items: start;
 `
 export const TextInfo = styled.Text`
-    font-weight: 600;
+    font-weight: 700;
     font-size: 18px;
 `
 export const TextInfoImage = styled.Text`

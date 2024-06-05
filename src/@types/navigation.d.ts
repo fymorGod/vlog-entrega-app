@@ -4,7 +4,7 @@ export declare global {
             Home: undefined;
             Login: undefined;
             Dash: undefined;
-            InitS: undefined;
+            ScannerNFe: undefined;
         }
     }
 }

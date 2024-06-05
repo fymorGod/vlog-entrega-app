@@ -9,7 +9,7 @@ export function InitScanner() {
     return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center'}}>
              <ToggleCamera>
-                  <ButtonCamera icon="camera" title="Scanner" onPress={() => navigation.navigate('Home')} />
+                  <ButtonCamera icon="camera" title="Iniciar Scanner" onPress={() => navigation.navigate('Home')} />
                 </ToggleCamera>
         </View>
     )
