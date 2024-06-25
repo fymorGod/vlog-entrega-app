@@ -18,18 +18,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ButtonFinish } from "../../components/ButtonFinish";
 
-interface FileUploadData {
-  store: string;
-  cpf: string;
-  client: string;
-  key_nf: string;
-  nf: string;
-  dav: string;
-  pre_nota: string;
-  status: number;
-  user_log: string;
-  photo: string[]; // Se `imageUris` é um array de strings
-}
 
 export function Dash() {
   const [cameraStats, setCameraStats] = useState(false);
@@ -70,37 +58,36 @@ export function Dash() {
     }
   };
 
- 
   const removeImage = (index: number) => {
     const newImageUris = [...imageUris];
     newImageUris.splice(index, 1);
     setImageUris(newImageUris);
   };
 
-  const createCustomerData = async () => {
-    const data = {
-      store: storeData,
-      cpf: nfeData.clienteE.cpfCliente,
-      client: nfeData.clienteE.nome,
-      key_nf: nfeData.nfe,
-      nf: nfeData.notaFiscal,
-      dav: nfeData.numeroDav,
-      pre_nota: nfeData.numeroPreNota,
-      status: 1,
-      user_log: username,
-  };
-    try {
-      const response = await axios.post<FileUploadData>('http://192.168.102.14:8080/api/v1/create-customer',data, {
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-      response.status == 201 ? true : false;
+  // const createCustomerData = async () => {
+  //   const data = {
+  //     store: storeData,
+  //     cpf: nfeData.clienteE.cpfCliente,
+  //     client: nfeData.clienteE.nome,
+  //     key_nf: nfeData.nfe,
+  //     nf: nfeData.notaFiscal,
+  //     dav: nfeData.numeroDav,
+  //     pre_nota: nfeData.numeroPreNota,
+  //     status: 1,
+  //     user_log: username,
+  // };
+  //   try {
+  //     const response = await axios.post<FileUploadData>('http://192.168.102.14:8080/api/v1/create-customer',data, {
+  //       headers: {
+  //         "Content-Type": "application/json"
+  //       }
+  //     })
+  //     response.status == 201 ? true : false;
 
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  // }
   const finishOperation = async () => {
     try {
         setLoading(true);
@@ -132,9 +119,7 @@ export function Dash() {
                 "Content-Type": "multipart/form-data"
             }
         });
-        console.log(response.status)
         if (response.status === 201) {
-            console.log(response.data);
             setImageUris([]);
             setLoading(false);
             Alert.alert('Fotos salvas!');
@@ -158,7 +143,6 @@ export function Dash() {
         </View>
       )}
       <>
-
         {(nfeData && !loading) ? (
           <CardInfo>
             <TextSpan>
