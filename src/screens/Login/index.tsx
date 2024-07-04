@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { Container, ContainerForm, Text, ContainerLogo, TextSpan, ContainerVersion, TextSpanVersion } from "./styles";
 import { Input } from "../../components/Input";
