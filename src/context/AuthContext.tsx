@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import { API_URL, TOKEN_KEY, URL_VALIDATE_DATA_SCANNER } from "../../env";
 
 type NfeProps = {
   clienteE: {
@@ -28,11 +29,6 @@ interface AuthProps {
   onNfeData?: (value: string) => Promise<any>;
   nfeData?: NfeProps;
 }
-
-export const API_URL = "https://api.apotiguar.com.br:64462";
-
-const TOKEN_KEY = "my-jwt";
-const URL_VALIDATE_DATA_SCANNER = "https://staging-potiguar-mcs-eportal-retirada-cliente-api.local/api/v1/nfe/data-consumer?";
 
 const AuthContext = createContext<AuthProps>({});
 
