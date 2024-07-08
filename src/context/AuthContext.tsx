@@ -32,7 +32,7 @@ interface AuthProps {
 export const API_URL = "https://api.apotiguar.com.br:64462";
 
 const TOKEN_KEY = "my-jwt";
-const URL_VALIDATE_DATA_SCANNER = "http://192.168.102.14:8084/api/v1/nfe/data-consumer?";
+const URL_VALIDATE_DATA_SCANNER = "https://staging-potiguar-mcs-eportal-retirada-cliente-api.local/api/v1/nfe/data-consumer?";
 
 const AuthContext = createContext<AuthProps>({});
 

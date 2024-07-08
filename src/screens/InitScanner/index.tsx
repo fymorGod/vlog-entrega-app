@@ -8,9 +8,13 @@ export function InitScanner() {
     const navigation = useNavigation();
     return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-             <ToggleCamera>
-                  <ButtonCamera icon="camera" title="Iniciar Scanner" onPress={() => navigation.navigate('Home')} />
-                </ToggleCamera>
+            <ToggleCamera>
+                <ButtonCamera 
+                icon="camera" 
+                title="Iniciar Scanner" 
+                onPress={() => navigation.navigate('Home')} 
+                />
+            </ToggleCamera>
         </View>
     )
 }

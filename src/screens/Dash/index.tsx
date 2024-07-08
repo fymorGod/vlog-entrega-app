@@ -115,7 +115,7 @@ export function Dash() {
         formData.append('status', '1'); // assuming status is a string
         formData.append('user_log', username);
 
-        const response = await axios.post('http://192.168.102.14:8084/api/v1/create-customer', formData, {
+        const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.local/api/v1/create-customer', formData, {
             headers: {
                 "Content-Type": "multipart/form-data"
             }

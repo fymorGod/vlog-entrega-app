@@ -1,3 +1,4 @@
+import React from "react";
 import { Entypo } from "@expo/vector-icons";
 import { TouchableOpacityProps } from "react-native";
 import { Container, Title } from "./styles";

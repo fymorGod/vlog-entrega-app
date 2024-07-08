@@ -28,6 +28,14 @@ export function Home() {
  
   const [cameraStats, setCameraStats] = useState(true);
 
+  // useEffect(() => {
+  //   const getImage = async () => {
+  //     const response = await axios.get('https://github.com/fymorGod.png')
+  //     console.log(response)
+  //   }
+  //   getImage()
+  // }, [])
+
   useEffect(() => {
     return () => {
       if (permission && permission.granted && cameraRef.current) {
