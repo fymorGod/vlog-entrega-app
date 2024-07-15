@@ -18,7 +18,6 @@ import { ButtonCamera } from "../../components/ButtonCameraNFE";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ButtonFinish } from "../../components/ButtonFinish";
-import { URL_CREATE_CUSTOMER } from "../../../env";
 
 
 export function Dash() {
@@ -116,11 +115,12 @@ export function Dash() {
         formData.append('status', '1'); // assuming status is a string
         formData.append('user_log', username);
 
-        const response = await axios.post(URL_CREATE_CUSTOMER + '/create-customer', formData, {
+        const response = await axios.post('http://localhost:8084/api/v1/create-customer', formData, {
             headers: {
                 "Content-Type": "multipart/form-data"
             }
         });
+        console.log(response)
         if (response.status === 201) {
             setImageUris([]);
             setLoading(false);

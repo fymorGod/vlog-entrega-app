@@ -69,7 +69,7 @@ export function Home() {
       setManualEntryValue(data);
       setLoading(true)
       onNfeData!(data);
-      if (!nfeData?.romaneio) {
+      if (!nfeData?.romaneio && !nfeData.status) {
         navigation.navigate("Dash");
       } else {
         Alert.alert("NFe já cadastrada!")
