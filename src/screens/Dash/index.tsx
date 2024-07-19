@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import {
   CardInfo,
   Container,
@@ -8,8 +8,7 @@ import {
   CardInfoImages,
   TextInfoImage,
 } from "./styles";
-import { useEffect, useState } from "react";
-import * as MediaLibrary from "expo-media-library";
+import { useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
@@ -18,16 +17,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ButtonFinish } from "../../components/ButtonFinish";
 import { AuthContext } from "../../context/AuthContext";
-
+import Toast from 'react-native-toast-message';
 
 export function Dash() {
   const [cameraStats, setCameraStats] = useState(false);
 
   const [imageUris, setImageUris] = useState<string[]>([]);
+
+  const [awsImage, setAwsImage] = useState<string>();
+  const [customerId, setCustomerId] = useState<string>();
+
   const [loading, setLoading] = useState<boolean>(false);
   const { nfe, user } = useContext(AuthContext)
   const navigation = useNavigation();
-  
+
   // useEffect(() => {
   //   (async () => {
   //     await MediaLibrary.requestPermissionsAsync();
@@ -65,50 +68,115 @@ export function Dash() {
     setImageUris(newImageUris);
   };
 
-  // criar lógica de envio de imagens
-  // const formData = new FormData();
-  // const currentDate = new Date();
-  // imageUris.forEach((uri, index) => {
-  //     const imageName = `photo_${currentDate.getTime()}_${index}.png`;
-  //     const imageFile = {
-  //         uri: uri,
-  //         name: imageName,
-  //         type: 'image/jpeg'
-  //     };
-  //     formData.append("file", imageFile);
-  // });
+  // Send images to AWS
+  const handleImageSubmit = async () => {
+    const currentDate = new Date();
+    imageUris.forEach((uri, index) => {
+      const imageName = `photo_${currentDate.getTime()}_${index}.png`;
+      const imageFile = {
+        uri: uri,
+        name: imageName,
+        type: 'image/jpeg'
+      };
+      sendToAwsImages(imageFile)
+    });
+  }
 
-  const finishOperation = async () => {
+  const sendToAwsImages = async (image: any) => {
     try {
-        setLoading(true);
-        const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', {
-          store: user?.storeCode,
-          cpf: nfe?.clienteE?.cpfCliente,
-          client: nfe?.clienteE?.nome,
-          key_nf: nfe?.nfe,
-          nf: nfe?.notaFiscal,
-          dav: nfe?.numeroDav,
-          pre_nota: nfe?.numeroPreNota,
-          status: '1',
-          user_log: user?.username
-        });
-
-        if (response.status === 201) {
-            setImageUris([]);
-            setLoading(false);
-            Alert.alert('Fotos salvas!');
-            navigation.navigate('ScannerNFe');
-        } else {
-            console.log("Error no envio de imagens");
-            setLoading(false);
-        }
+      const response = await axios.post('https://stating-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/upload', {
+        file: image
+      })
+      if (response.status == 200) {
+        console.log(response.data)
+        setAwsImage(response.data)
+        setImageUris([]);
+        Toast.show({
+          type: 'success',
+          text1: 'Imagens enviadas com sucesso',
+          visibilityTime: 5000
+        })
+      }
     } catch (error) {
-        console.error('Erro ao enviar as imagens:', error);
-        Alert.alert('Erro ao enviar as imagens.');
+      console.log(error)
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao enviar imagenns para AWS: ' + error,
+        visibilityTime: 5000
+      })
     }
-};
+  }
 
+  // Send customer to DB 
+  const createCustomer = async () => {
+    try {
+      const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', {
+        store: user?.storeCode,
+        cpf: nfe?.clienteE?.cpfCliente,
+        client: nfe?.clienteE?.nome,
+        key_nf: nfe?.nfe,
+        nf: nfe?.notaFiscal,
+        dav: nfe?.numeroDav,
+        pre_nota: nfe?.numeroPreNota,
+        status: '1',
+        user_log: user?.username
+      });
 
+      if (response.status === 201) {
+        Toast.show({
+          type: 'success',
+          text1: 'Customer criado com sucesso',
+          visibilityTime: 5000
+        })
+        setCustomerId(response.data)
+        navigation.navigate('ScannerNFe');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error ao criar o customer',
+          visibilityTime: 5000
+        })
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Erro ao enviar as imagens:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao enviar as imagens: ' + error,
+        visibilityTime: 5000
+      });
+    }
+  }
+  // Send to DB Images Relations with Customer
+  const createImageCustomer = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post('https://stating-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/customer-image', {
+        url: awsImage,
+        customerPickupId:customerId 
+      })
+      if (response.status == 200) {
+       setLoading(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Processo concluído com sucesso',
+          visibilityTime: 5000
+        })
+      }
+    } catch (error) {
+      console.log(error)
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao enviar Processo para o Servidor: ' + error,
+        visibilityTime: 5000
+      })
+    }
+  };
+
+  // finishOperation
+  // handleImageSubmit() envio de imagens para aws 
+  // createCustomer()
+  // createImageCustomer()
   return (
     <Container>
       {loading && (
@@ -122,32 +190,32 @@ export function Dash() {
           <CardInfo>
             <TextSpan>
               <TextInfo>CPF: </TextInfo>
-              <Text style={{ fontSize: 18}}>{nfe?.clienteE.cpfCliente}</Text>
+              <Text style={{ fontSize: 18 }}>{nfe?.clienteE.cpfCliente}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nome: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfe?.clienteE.nome}</Text>
+              <Text style={{ fontSize: 18 }}>{nfe?.clienteE.nome}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>NFE: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfe?.nfe}</Text>
+              <Text style={{ fontSize: 18 }}>{nfe?.nfe}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nota Fiscal: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfe?.notaFiscal}</Text>
+              <Text style={{ fontSize: 18 }}>{nfe?.notaFiscal}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número DAV: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfe.numeroDav}</Text>
+              <Text style={{ fontSize: 18 }}>{nfe.numeroDav}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número Pré-Nota: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfe?.numeroPreNota}</Text>
+              <Text style={{ fontSize: 18 }}>{nfe?.numeroPreNota}</Text>
             </TextSpan>
           </CardInfo>
         ) : <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#0000ff" />
-            </View>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
         }
         {
           !loading && (
@@ -159,27 +227,27 @@ export function Dash() {
                 </View>
 
                 <FlatList
-                    horizontal
-                    keyExtractor={(item, index) => index.toString()}
-                    data={imageUris}
-                    renderItem={({ item, index }) => (
-                      <View style={{ width: 100, position: 'relative' }}>
-                        <Image source={{ uri: item }} style={styles.image} />
-                        {index >= 2 && (
-                          <TouchableOpacity
-                            style={styles.deleteIcon}
-                            onPress={() => removeImage(index)}
-                          >
-                            <Ionicons name="trash" size={24} color="white" style={{ marginRight: 10 }} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    )}
-                    
-                    contentContainerStyle={styles.imagesContainer}
-                    showsHorizontalScrollIndicator={false}
-                  />
-        
+                  horizontal
+                  keyExtractor={(item, index) => index.toString()}
+                  data={imageUris}
+                  renderItem={({ item, index }) => (
+                    <View style={{ width: 100, position: 'relative' }}>
+                      <Image source={{ uri: item }} style={styles.image} />
+                      {index >= 2 && (
+                        <TouchableOpacity
+                          style={styles.deleteIcon}
+                          onPress={() => removeImage(index)}
+                        >
+                          <Ionicons name="trash" size={24} color="white" style={{ marginRight: 10 }} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+
+                  contentContainerStyle={styles.imagesContainer}
+                  showsHorizontalScrollIndicator={false}
+                />
+
               </CardInfoImages>
               <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center' }}>
                 <ToggleCamera>
@@ -224,7 +292,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   imagesContainer: {
-    gap:10,
+    gap: 10,
     marginTop: 10,
   },
   camera: {

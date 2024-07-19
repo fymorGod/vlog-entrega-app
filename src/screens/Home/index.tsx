@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   Modal,
   StyleSheet,
@@ -16,21 +15,22 @@ import { Button } from "../../components/Button";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
+import Toast from "react-native-toast-message";
 
 export const URL_VALIDATE_DATA_SCANNER = "https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?";
 
 export function Home() {
   const [permission, requestPermission] = useCameraPermissions();
-  const [scannedBarcode, setScannedBarcode] = useState<string>("");
   const [modalVisible, setModalVisible] = useState(false);
   const [manualEntryValue, setManualEntryValue] = useState("");
-  const cameraRef = useRef<CameraView>(null);
   
-  const { setNfe, user: {storeCode}, nfe } = useContext(AuthContext)
+  const cameraRef = useRef<CameraView>(null);
+
+  const { setNfe, user: { storeCode }, nfe } = useContext(AuthContext)
 
   const navigation = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
- 
+
   const [cameraStats, setCameraStats] = useState(true);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function Home() {
       }
     };
   }, [permission]);
-  
+
   if (!permission) {
     return <View />;
   }
@@ -49,7 +49,7 @@ export function Home() {
     return (
       <View style={styles.container}>
         <Text style={{ textAlign: "center" }}>
-          We need your permission to show the camera
+          É necessário sua permissão para acessar o scanner
         </Text>
         <Button onPress={requestPermission} title="Permitir de acesso a câmera." />
       </View>
@@ -62,15 +62,30 @@ export function Home() {
 
   const sendNfe = async (scannerNotaFiscal: string) => {
     try {
-      const res = await axios.get( URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
-      if(res.status == 200) {
+      const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
+      if (res.status == 200) {
         setNfe(res.data[0])
-        
-        if (nfe != null && nfe.status === null) {
+        console.log(nfe.status)
+        if (nfe != null && nfe.status == null) {
+          setLoading(false);
+          setCameraStats(true)
+          Toast.show({
+            type: 'success',
+            text1: 'NFE pronta para cadastro',
+            text1Style: {
+              alignContent: "center"
+            },
+            visibilityTime: 5000
+          });
           navigation.navigate("Dash")
         } else {
           setCameraStats(false)
-          Alert.alert("NFE já cadastrada no Sistema.")
+          Toast.show({
+            type: 'error',
+            text1: 'NFE já cadastrada no sistema.',
+            visibilityTime: 5000
+          });
+
           navigation.navigate("ScannerNFe")
         }
       }
@@ -81,8 +96,6 @@ export function Home() {
 
   async function handleScan({ data }: BarCodeScannerResult) {
     if (data) {
-      setScannedBarcode(data);
- 
       setLoading(true);
       setCameraStats(false)
       sendNfe(data);
@@ -92,14 +105,12 @@ export function Home() {
     }
   }
 
-
   function sendNFEManualmente() {
     const textValid = manualEntryValue.replace(/\s/g, "");
 
     if (textValid.length == 44) {
       setLoading(true)
-      setScannedBarcode(textValid);
-      sendNfe(scannedBarcode);
+      sendNfe(textValid);
       setModalVisible(false);
       setCameraStats(false)
     } else {
@@ -110,39 +121,43 @@ export function Home() {
 
   return (
     <View style={styles.container}>
-        {loading && (
+      {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0a0a0a" />
         </View>
       )}
-    {
-      cameraStats ? 
-      <CameraView
-      onBarcodeScanned={handleScan}
-      style={styles.camera}
-      pictureSize={"1920x1080"}
-      ref={cameraRef}
-    />
-    : null
-    }
-      <View style={styles.barcodeDataContainer}>
-        <View style={styles.buttonContainer}>
-          <View style={{ width: "60%", marginLeft: 15 }}>
-            <Button
-              title="Scanear Novamente"
-              onPress={() => setScannedBarcode("")}
-            />
-          </View>
-          <View style={{ width: "50%", marginRight: 5, marginLeft: -10 }}>
-            <Button
-              title="Digitar Nota"
-              onPress={() => {
-                setModalVisible(true);
-              }}
-            />
+      {
+        cameraStats ?
+          <CameraView
+            onBarcodeScanned={handleScan}
+            style={styles.camera}
+            pictureSize={"1920x1080"}
+            ref={cameraRef}
+          />
+          : null
+      }
+      {
+        loading == false ? <View style={styles.barcodeDataContainer}>
+          <View style={styles.buttonContainer}>
+            <View style={{ width: "60%", marginLeft: 15 }}>
+              <Button
+                title="Scanear Novamente"
+                onPress={() => setCameraStats(true)}
+              />
+            </View>
+            <View style={{ width: "50%", marginRight: 5, marginLeft: -10 }}>
+              <Button
+                title="Digitar Nota"
+                onPress={() => {
+                  setModalVisible(true);
+                }}
+              />
+            </View>
           </View>
         </View>
-      </View>
+        : null
+      }
+
       <Modal
         animationType="slide"
         transparent={true}

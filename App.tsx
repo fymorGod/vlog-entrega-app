@@ -8,6 +8,8 @@ import { Button, StyleSheet, View } from "react-native";
 import { Dash } from "./src/screens/Dash";
 import { InitScanner } from "./src/screens/InitScanner";
 
+import Toast from 'react-native-toast-message';
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -35,7 +37,7 @@ export const Layout = () => {
                   <View style={styles.buttonContainer}>
                     <Button onPress={logout} title="Sair" color="#170E49" />
                   </View>
-                ),
+                )
               }}
             ></Stack.Screen>
 
@@ -73,6 +75,7 @@ export const Layout = () => {
           ></Stack.Screen>
         )}
       </Stack.Navigator>
+      <Toast />
     </NavigationContainer>
   );
 };
