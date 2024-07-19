@@ -168,114 +168,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     console.log(token)
   }
 
-  // useEffect(() => {
-  //   const loadToken = async () => {
-  //     const token = await SecureStore.getItemAsync(TOKEN_KEY);
-  //     console.log("stored:", token);
-  //     if (token) {
-  //       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-  //       setAuthState({
-  //         token: token,
-  //         authenticated: true,
-  //         storeData: storeData,
-  //       });
-  //     }
-  //   };
-  //   loadToken();
-  // }, []);
-
-  // const loadData = async (s: string) => {
-  //   if (!s) {
-  //     console.error("O código de barras escaneado é vazio ou indefinido.");
-  //     return false;
-  //   } else {
-  //     const response = await axios.get(
-  //       URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${s}&unidadeIE=${storeData}`,
-  //     );
-  //     const data = await response.data;
-  //     setNfeData(data[0]);
-  //     return data[0]
-  //   }
-  // };
-
-  // if (!nfeData?.romaneio && !nfeData?.status) {
-  //   navigation.navigate("Dash");
-  // } else {
-  //   Alert.alert("NFe já cadastrada!")
-  // }
-
-
-
-  // const validatePerfil = (validateAuth: any, result: any) => {
-  //   if (
-  //     (result.data.data && validateAuth.admin === 1) ||
-  //     validateAuth.exp === 1 ||
-  //     validateAuth.expl === 1
-  //   ) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // };
-
-  // const login = async (mode: string, username: string, password: string) => {
-  //   try {
-  //     const result = await axios.post(`${API_URL}`, {
-  //       mode,
-  //       username,
-  //       password,
-  //     });
-
-  //     if (validatePerfil(result.data.data.permissions, result)) {
-  //       setAuthState({
-  //         token: result.data.data.token,
-  //         authenticated: true,
-  //         storeData: result.data.data.store_code
-  //       });
-
-  //       setStoreData(result.data.data.store_code);
-  //       setLojaInfo(result.data.data.store_name);
-  //       setUsername(result.data.data.username)
-
-  //       axios.defaults.headers.common["Authorization"] =
-  //         `Bearer ${result.data.data.token}`;
-
-  //       await SecureStore.setItemAsync(TOKEN_KEY, result.data.data.token);
-
-  //       return result;
-  //     } else {
-  //       return {
-  //         error: true,
-  //         msg: "Erro ao autenticar. Token não recebido na resposta.",
-  //       };
-  //     }
-  //   } catch (e: any) {
-  //     return {
-  //       error: true,
-  //       msg:
-  //         e.response &&
-  //           e.response.data &&
-  //           e.response.data.data &&
-  //           e.response.data.data.flag
-  //           ? e.response.data.data.flag
-  //           : "Usuário e senha incorreta",
-  //     };
-  //   }
-  // };
-
-  // const logout = async () => {
-  //   await SecureStore.deleteItemAsync(TOKEN_KEY);
-
-  //   axios.defaults.headers.common["Authorization"] = "";
-
-  //   setAuthState({
-  //     token: null,
-  //     authenticated: false,
-  //     storeData: null,
-  //   });
-  // };
-
   return <AuthContext.Provider value={{
     logout,
     token,
@@ -288,3 +180,5 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setNfe: updateNfe
   }}>{children}</AuthContext.Provider>;
 };
+
+
