@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   Modal,
   StyleSheet,
@@ -14,7 +13,10 @@ import { BarCodeScannerResult } from "expo-barcode-scanner";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../../context/AuthContext";
+import { AuthContext } from "../../context/AuthContext";
+import axios from "axios";
+
+export const URL_VALIDATE_DATA_SCANNER = "https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?";
 
 export function Home() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -22,19 +24,13 @@ export function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [manualEntryValue, setManualEntryValue] = useState("");
   const cameraRef = useRef<CameraView>(null);
-  const { onNfeData, nfeData } = useAuth();
+  
+  const { setNfe, user: {storeCode} } = useContext(AuthContext)
+
   const navigation = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
  
   const [cameraStats, setCameraStats] = useState(true);
-
-  // useEffect(() => {
-  //   const getImage = async () => {
-  //     const response = await axios.get('https://github.com/fymorGod.png')
-  //     console.log(response)
-  //   }
-  //   getImage()
-  // }, [])
 
   useEffect(() => {
     return () => {
@@ -63,18 +59,27 @@ export function Home() {
     Keyboard.dismiss();
   };
 
-  function handleScan({ data }: BarCodeScannerResult) {
+  const sendNfe = async (scannerNotaFiscal: string) => {
+    try {
+      const res = await axios.get( URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
+      if(res.status == 200) {
+        console.log(res.data[0])
+        setNfe(res.data[0])
+        navigation.navigate("Dash")
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  async function handleScan({ data }: BarCodeScannerResult) {
     if (data) {
       setScannedBarcode(data);
       setManualEntryValue(data);
       setLoading(true)
-      onNfeData!(data);
-      if (!nfeData?.romaneio && !nfeData.status) {
-        navigation.navigate("Dash");
-      } else {
-        Alert.alert("NFe já cadastrada!")
-      }
+      sendNfe(data);
     } else {
+      setLoading(false)
       console.error("O código de barras escaneado é vazio ou indefinido.");
     }
   }
@@ -86,17 +91,11 @@ export function Home() {
     if (textValid.length == 44) {
       setLoading(true)
       setScannedBarcode(manualEntryValue);
-      onNfeData!(scannedBarcode);
+      sendNfe(scannedBarcode);
       setModalVisible(false);
       setCameraStats(false)
-      if (!nfeData?.romaneio) {
-        setLoading(false)
-        navigation.navigate("Dash");
-      } else {
-        setLoading(false)
-        Alert.alert("NFe já cadastrada!")
-      }
     } else {
+      setLoading(false)
       setModalVisible(false);
     }
   }

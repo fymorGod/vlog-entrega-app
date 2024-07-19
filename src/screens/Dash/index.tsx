@@ -27,6 +27,7 @@ export function Dash() {
   const [loading, setLoading] = useState<boolean>(false);
   const { nfeData, username, storeData, authState } = useAuth();
   const navigation = useNavigation();
+  
 
   useEffect(() => {
     (async () => {
@@ -106,16 +107,16 @@ export function Dash() {
         });
 
         formData.append('store', storeData);
-        formData.append('cpf', nfeData.clienteE.cpfCliente);
-        formData.append('client', nfeData.clienteE.nome);
-        formData.append('key_nf', nfeData.nfe);
-        formData.append('nf', nfeData.notaFiscal);
-        formData.append('dav', nfeData.numeroDav);
-        formData.append('pre_nota', nfeData.numeroPreNota);
+        formData.append('cpf', nfeData[0].clienteE.cpfCliente);
+        formData.append('client', nfeData[0].clienteE.nome);
+        formData.append('key_nf', nfeData[0].nfe);
+        formData.append('nf', nfeData[0].notaFiscal);
+        formData.append('dav', nfeData[0].numeroDav);
+        formData.append('pre_nota', nfeData[0].numeroPreNota);
         formData.append('status', '1'); // assuming status is a string
         formData.append('user_log', username);
 
-        const response = await axios.post('http://localhost:8084/api/v1/create-customer', formData, {
+        const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', formData, {
             headers: {
                 "Content-Type": "multipart/form-data"
             }
@@ -142,34 +143,35 @@ export function Dash() {
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
+          <Text>Aguarde, carregando...</Text>
         </View>
       )}
       <>
-        {(nfeData && !loading) ? (
+        {(nfeData[0] && !loading) ? (
           <CardInfo>
             <TextSpan>
               <TextInfo>CPF: </TextInfo>
-              <Text style={{ fontSize: 18}}>{nfeData?.clienteE.cpfCliente}</Text>
+              <Text style={{ fontSize: 18}}>{nfeData[0]?.clienteE.cpfCliente}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nome: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData?.clienteE.nome}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData[0]?.clienteE.nome}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>NFE: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData?.nfe}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData[0]?.nfe}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nota Fiscal: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData?.notaFiscal}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData[0]?.notaFiscal}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número DAV: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData.numeroDav}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData[0].numeroDav}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número Pré-Nota: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData?.numeroPreNota}</Text>
+              <Text  style={{ fontSize: 18}}>{nfeData[0]?.numeroPreNota}</Text>
             </TextSpan>
           </CardInfo>
         ) : <View style={styles.loadingContainer}>

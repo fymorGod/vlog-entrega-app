@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useContext } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { AuthProvider, useAuth } from "./src/context/AuthContext";
+import { AuthContext, AuthProvider } from "./src/context/AuthContext";
 import { Home } from "./src/screens/Home";
 import { Login } from "./src/screens/Login";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -19,12 +19,13 @@ export default function App() {
 }
 
 export const Layout = () => {
-  const { authState, onLogout, lojaInfo } = useAuth();
+  //const { authState, onLogout, lojaInfo } = useAuth();
+  const { authenticated, logout, user: { lojaInfo } } = useContext(AuthContext)
 
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {authState?.authenticated ? (
+        {authenticated ? (
           <>
            <Stack.Screen
               name="ScannerNFe"
@@ -32,7 +33,7 @@ export const Layout = () => {
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={onLogout} title="Sair" color="#170E49" />
+                    <Button onPress={logout} title="Sair" color="#170E49" />
                   </View>
                 ),
               }}
@@ -44,7 +45,7 @@ export const Layout = () => {
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={onLogout} title="Sair" color="#170E49" />
+                    <Button onPress={logout} title="Sair" color="#170E49" />
                   </View>
                 ),
               }}
@@ -58,7 +59,7 @@ export const Layout = () => {
                 headerTintColor: "#f/4511e",
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={onLogout} title="Sair" color="#170E49" />
+                    <Button onPress={logout} title="Sair" color="#170E49" />
                   </View>
                 ),
               }}
