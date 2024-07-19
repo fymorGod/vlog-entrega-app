@@ -17,7 +17,7 @@ type FormData = {
 export function Login() {
     const mode = 'login'
 
-    const { setToken, setUser } = useContext(AuthContext);
+    const { setToken, setUser, setAuthenticated } = useContext(AuthContext);
     const navigation = useNavigation()
 
     const { handleSubmit, control, formState: { errors } } = useForm<FormData>()
@@ -32,11 +32,13 @@ export function Login() {
                 username: data.username,
                 password: data.password
             })
+            console.log(res.data.data.permissions.admin)
             if (res.status == 200 &&
                 (res.data.data.permissions.admin === 1 ||
                     res.data.data.permissions.exp === 1 ||
                     res.data.data.permissions.expl === 1)) {
-                console.log(res)
+                
+                setAuthenticated("authenticate")
                 setToken(res.data.data.token)
                 setUser({
                     lojaInfo: res.data.data.store_name,

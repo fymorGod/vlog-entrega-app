@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Keyboard,
   Modal,
   StyleSheet,
@@ -25,7 +26,7 @@ export function Home() {
   const [manualEntryValue, setManualEntryValue] = useState("");
   const cameraRef = useRef<CameraView>(null);
   
-  const { setNfe, user: {storeCode} } = useContext(AuthContext)
+  const { setNfe, user: {storeCode}, nfe } = useContext(AuthContext)
 
   const navigation = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
@@ -63,9 +64,15 @@ export function Home() {
     try {
       const res = await axios.get( URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
       if(res.status == 200) {
-        console.log(res.data[0])
         setNfe(res.data[0])
-        navigation.navigate("Dash")
+        
+        if (nfe != null && nfe.status === null) {
+          navigation.navigate("Dash")
+        } else {
+          setCameraStats(false)
+          Alert.alert("NFE já cadastrada no Sistema.")
+          navigation.navigate("ScannerNFe")
+        }
       }
     } catch (error) {
       console.log(error)
@@ -75,8 +82,9 @@ export function Home() {
   async function handleScan({ data }: BarCodeScannerResult) {
     if (data) {
       setScannedBarcode(data);
-      setManualEntryValue(data);
-      setLoading(true)
+ 
+      setLoading(true);
+      setCameraStats(false)
       sendNfe(data);
     } else {
       setLoading(false)
@@ -90,7 +98,7 @@ export function Home() {
 
     if (textValid.length == 44) {
       setLoading(true)
-      setScannedBarcode(manualEntryValue);
+      setScannedBarcode(textValid);
       sendNfe(scannedBarcode);
       setModalVisible(false);
       setCameraStats(false)

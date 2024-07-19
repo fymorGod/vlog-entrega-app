@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { createContext, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -73,57 +73,99 @@ export const AuthContext = createContext<AuthContextType>({
 // const URL_VALIDATE_DATA_SCANNER = "https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?";
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+
+  useEffect(() => {
+    const fetchStoredData = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        setToken(storedToken);
+
+        const storedAuthenticated = await AsyncStorage.getItem('authenticated');
+        setAuthenticated(storedAuthenticated);
+
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+
+      } catch (error) {
+        console.error('Erro ao carregar dados do AsyncStorage:', error);
+      }
+    };
+
+    fetchStoredData();
+  }, []);
+
   
-  const [ token, setToken ] = useState<string | null>(() => {
-    const storedToken = localStorage.getItem("token");
-    return storedToken ? storedToken : null
-  });
+  const [ token, setToken ] = useState<string | null>(null);
 
-  const [ nfe, setNfe ] = useState<Nfe | null>();
+  const [ nfe, setNfe ] = useState<Nfe | null>(null);
 
-  const [ authenticated, setAuthenticated ] = useState<string | null>(() => {
-    const storedAuthenticated = localStorage.getItem("authenticated");
-    return storedAuthenticated ? storedAuthenticated : null
-  });
+  const [ authenticated, setAuthenticated ] = useState<string | null>(null);
 
-  const [ user, setUser ] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  })
+  const [ user, setUser ] = useState<User | null>(null)
 
-  const updateToken = (newToken: string | null) => {
-    setToken(newToken);
-    if (newToken) {
-      localStorage.setItem("token", newToken);
-    } else {
-      localStorage.removeItem("token");
-    }
-  };
+
   const updateNfe = (newNfe: Nfe | null) => {
     setNfe(newNfe)
   } 
 
-  const updateAuthenticated = (newAuthenticated: string | null) => {
-    setAuthenticated(newAuthenticated);
-    if (newAuthenticated) {
-      localStorage.setItem("authenticated", newAuthenticated);
+  const updateToken = async (newToken: string | null) => {
+    setToken(newToken);
+    if (newToken) {
+      try {
+        await AsyncStorage.setItem('token', newToken);
+      } catch (error) {
+        console.error('Erro ao salvar token no AsyncStorage:', error);
+      }
     } else {
-      localStorage.removeItem("authenticated");
+      try {
+        await AsyncStorage.removeItem('token');
+      } catch (error) {
+        console.error('Erro ao remover token do AsyncStorage:', error);
+      }
     }
   };
 
-  const updateUser = (newUser: User | null) => {
-    setUser(newUser)
-    if(newUser) {
-      localStorage.setItem("user", JSON.stringify(newUser))
+  const updateAuthenticated = async (newAuthenticated: string | null) => {
+    setAuthenticated(newAuthenticated);
+    if (newAuthenticated) {
+      try {
+        await AsyncStorage.setItem('authenticated', newAuthenticated);
+      } catch (error) {
+        console.error('Erro ao salvar authenticated no AsyncStorage:', error);
+      }
     } else {
-      localStorage.removeItem("user")
+      try {
+        await AsyncStorage.removeItem('authenticated');
+      } catch (error) {
+        console.error('Erro ao remover authenticated do AsyncStorage:', error);
+      }
     }
-  }
+  };
 
+  const updateUser = async (newUser: User | null) => {
+    setUser(newUser);
+    if (newUser) {
+      try {
+        await AsyncStorage.setItem('user', JSON.stringify(newUser));
+      } catch (error) {
+        console.error('Erro ao salvar usuário no AsyncStorage:', error);
+      }
+    } else {
+      try {
+        await AsyncStorage.removeItem('user');
+      } catch (error) {
+        console.error('Erro ao remover usuário do AsyncStorage:', error);
+      }
+    }
+  };
   const logout = () => {
+    console.log("logout")
     updateToken(null)
     updateUser(null)
+    updateUser(null)
+    console.log(token)
   }
 
   // useEffect(() => {

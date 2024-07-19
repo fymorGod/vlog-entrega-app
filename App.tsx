@@ -20,12 +20,12 @@ export default function App() {
 
 export const Layout = () => {
   //const { authState, onLogout, lojaInfo } = useAuth();
-  const { authenticated, logout, user: { lojaInfo } } = useContext(AuthContext)
+  const { token, authenticated, logout, user } = useContext(AuthContext)
 
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {authenticated ? (
+        {authenticated && token != null ? (
           <>
            <Stack.Screen
               name="ScannerNFe"
@@ -55,7 +55,7 @@ export const Layout = () => {
               name="Dash"
               component={Dash}
               options={{
-                title: `${lojaInfo}`,
+                title: `${user?.lojaInfo}`,
                 headerTintColor: "#f/4511e",
                 headerRight: () => (
                   <View style={styles.buttonContainer}>

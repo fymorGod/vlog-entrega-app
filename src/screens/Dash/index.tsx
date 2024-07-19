@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   CardInfo,
   Container,
@@ -10,14 +10,14 @@ import {
 } from "./styles";
 import { useEffect, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
-import { ActivityIndicator, Alert, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useAuth } from "../../context/AuthContext";
+import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
 import { ButtonCamera } from "../../components/ButtonCameraNFE";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ButtonFinish } from "../../components/ButtonFinish";
+import { AuthContext } from "../../context/AuthContext";
 
 
 export function Dash() {
@@ -25,15 +25,14 @@ export function Dash() {
 
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { nfeData, username, storeData, authState } = useAuth();
+  const { nfe, user } = useContext(AuthContext)
   const navigation = useNavigation();
   
-
-  useEffect(() => {
-    (async () => {
-      await MediaLibrary.requestPermissionsAsync();
-    })();
-  }, []);
+  // useEffect(() => {
+  //   (async () => {
+  //     await MediaLibrary.requestPermissionsAsync();
+  //   })();
+  // }, []);
 
   const openCamera = async () => {
     setLoading(true);
@@ -66,62 +65,34 @@ export function Dash() {
     setImageUris(newImageUris);
   };
 
-  // const createCustomerData = async () => {
-  //   const data = {
-  //     store: storeData,
-  //     cpf: nfeData.clienteE.cpfCliente,
-  //     client: nfeData.clienteE.nome,
-  //     key_nf: nfeData.nfe,
-  //     nf: nfeData.notaFiscal,
-  //     dav: nfeData.numeroDav,
-  //     pre_nota: nfeData.numeroPreNota,
-  //     status: 1,
-  //     user_log: username,
-  // };
-  //   try {
-  //     const response = await axios.post<FileUploadData>('http://192.168.102.14:8080/api/v1/create-customer',data, {
-  //       headers: {
-  //         "Content-Type": "application/json"
-  //       }
-  //     })
-  //     response.status == 201 ? true : false;
+  // criar lógica de envio de imagens
+  // const formData = new FormData();
+  // const currentDate = new Date();
+  // imageUris.forEach((uri, index) => {
+  //     const imageName = `photo_${currentDate.getTime()}_${index}.png`;
+  //     const imageFile = {
+  //         uri: uri,
+  //         name: imageName,
+  //         type: 'image/jpeg'
+  //     };
+  //     formData.append("file", imageFile);
+  // });
 
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
   const finishOperation = async () => {
     try {
         setLoading(true);
-        const formData = new FormData();
-        const currentDate = new Date();
-
-        imageUris.forEach((uri, index) => {
-            const imageName = `photo_${currentDate.getTime()}_${index}.png`;
-            const imageFile = {
-                uri: uri,
-                name: imageName,
-                type: 'image/jpeg'
-            };
-            formData.append("file", imageFile);
+        const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', {
+          store: user?.storeCode,
+          cpf: nfe?.clienteE?.cpfCliente,
+          client: nfe?.clienteE?.nome,
+          key_nf: nfe?.nfe,
+          nf: nfe?.notaFiscal,
+          dav: nfe?.numeroDav,
+          pre_nota: nfe?.numeroPreNota,
+          status: '1',
+          user_log: user?.username
         });
 
-        formData.append('store', storeData);
-        formData.append('cpf', nfeData[0].clienteE.cpfCliente);
-        formData.append('client', nfeData[0].clienteE.nome);
-        formData.append('key_nf', nfeData[0].nfe);
-        formData.append('nf', nfeData[0].notaFiscal);
-        formData.append('dav', nfeData[0].numeroDav);
-        formData.append('pre_nota', nfeData[0].numeroPreNota);
-        formData.append('status', '1'); // assuming status is a string
-        formData.append('user_log', username);
-
-        const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        });
-        console.log(response)
         if (response.status === 201) {
             setImageUris([]);
             setLoading(false);
@@ -147,31 +118,31 @@ export function Dash() {
         </View>
       )}
       <>
-        {(nfeData[0] && !loading) ? (
+        {(nfe && !loading) ? (
           <CardInfo>
             <TextSpan>
               <TextInfo>CPF: </TextInfo>
-              <Text style={{ fontSize: 18}}>{nfeData[0]?.clienteE.cpfCliente}</Text>
+              <Text style={{ fontSize: 18}}>{nfe?.clienteE.cpfCliente}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nome: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData[0]?.clienteE.nome}</Text>
+              <Text  style={{ fontSize: 18}}>{nfe?.clienteE.nome}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>NFE: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData[0]?.nfe}</Text>
+              <Text  style={{ fontSize: 18}}>{nfe?.nfe}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Nota Fiscal: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData[0]?.notaFiscal}</Text>
+              <Text  style={{ fontSize: 18}}>{nfe?.notaFiscal}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número DAV: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData[0].numeroDav}</Text>
+              <Text  style={{ fontSize: 18}}>{nfe.numeroDav}</Text>
             </TextSpan>
             <TextSpan>
               <TextInfo>Número Pré-Nota: </TextInfo>
-              <Text  style={{ fontSize: 18}}>{nfeData[0]?.numeroPreNota}</Text>
+              <Text  style={{ fontSize: 18}}>{nfe?.numeroPreNota}</Text>
             </TextSpan>
           </CardInfo>
         ) : <View style={styles.loadingContainer}>
