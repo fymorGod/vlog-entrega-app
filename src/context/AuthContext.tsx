@@ -7,14 +7,14 @@ interface Cliente {
   cpfCliente: string;
   nome: string;
 }
-interface Nfe {
+export interface Nfe {
   clienteE: Cliente;
   nfe: string;
   notaFiscal: number;
   numeroDav: string;
   numeroPreNota: string;
   romaneio: string;
-  status: string;
+  status: string | null;
 }
 interface User {
   username: string;
@@ -40,7 +40,7 @@ const initialUser: User | null = {
   username: ""
 }
 
-const initialNfe: Nfe | null = {
+const initialNfe: Nfe = {
   clienteE: {
     cpfCliente: "",
     id: 0,
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   
   const [ token, setToken ] = useState<string | null>(null);
 
-  const [ nfe, setNfe ] = useState<Nfe | null>(null);
+  const [ nfe, setNfe ] = useState<Nfe>(initialNfe);
 
   const [ authenticated, setAuthenticated ] = useState<string | null>(null);
 

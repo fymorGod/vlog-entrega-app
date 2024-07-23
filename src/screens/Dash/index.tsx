@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import {
   CardInfo,
   Container,
@@ -9,7 +9,14 @@ import {
   TextInfoImage,
 } from "./styles";
 import { useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { 
+  ActivityIndicator, 
+  FlatList, 
+  Image, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
 import { ButtonCamera } from "../../components/ButtonCameraNFE";
@@ -17,25 +24,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ButtonFinish } from "../../components/ButtonFinish";
 import { AuthContext } from "../../context/AuthContext";
+
 import Toast from 'react-native-toast-message';
 
 export function Dash() {
+  const { nfe, user } = useContext(AuthContext)
+
   const [cameraStats, setCameraStats] = useState(false);
 
   const [imageUris, setImageUris] = useState<string[]>([]);
 
-  const [awsImage, setAwsImage] = useState<string>();
-  const [customerId, setCustomerId] = useState<string>();
-
+  const [awsImage, setAwsImage] = useState<string[]>([]);
+  const [customerId, setCustomerId] = useState<number>();
+  const { current } = useRef(awsImage)
   const [loading, setLoading] = useState<boolean>(false);
-  const { nfe, user } = useContext(AuthContext)
-  const navigation = useNavigation();
 
-  // useEffect(() => {
-  //   (async () => {
-  //     await MediaLibrary.requestPermissionsAsync();
-  //   })();
-  // }, []);
+  const navigation = useNavigation();
 
   const openCamera = async () => {
     setLoading(true);
@@ -68,29 +72,50 @@ export function Dash() {
     setImageUris(newImageUris);
   };
 
+  useEffect(() => {
+    if ( current !== awsImage ) {
+      createImageCustomer()
+    }
+  }, [[awsImage]])
+
   // Send images to AWS
   const handleImageSubmit = async () => {
+   try {
     const currentDate = new Date();
-    imageUris.forEach((uri, index) => {
+    imageUris.forEach(async (uri, index) => {
       const imageName = `photo_${currentDate.getTime()}_${index}.png`;
       const imageFile = {
         uri: uri,
         name: imageName,
         type: 'image/jpeg'
       };
-      sendToAwsImages(imageFile)
+      // send image file to function for sending to aws bucket
+      await sendToAwsImages(imageFile)
+      
     });
+    
+   } catch (error) {
+    console.log(error)
+    Toast.show({
+      type: 'error',
+      text1: 'Erro ao enviar imagenns para AWS: ' + error,
+      visibilityTime: 5000
+    })
+   }
   }
 
   const sendToAwsImages = async (image: any) => {
     try {
-      const response = await axios.post('https://stating-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/upload', {
-        file: image
-      })
-      if (response.status == 200) {
-        console.log(response.data)
+      const formData = new FormData();
+      formData.append('file', image);
+      const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200) {
         setAwsImage(response.data)
-        setImageUris([]);
         Toast.show({
           type: 'success',
           text1: 'Imagens enviadas com sucesso',
@@ -101,7 +126,7 @@ export function Dash() {
       console.log(error)
       Toast.show({
         type: 'error',
-        text1: 'Erro ao enviar imagenns para AWS: ' + error,
+        text1: 'Erro ao enviar imagens para AWS: ' + error,
         visibilityTime: 5000
       })
     }
@@ -111,38 +136,31 @@ export function Dash() {
   const createCustomer = async () => {
     try {
       const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', {
-        store: user?.storeCode,
-        cpf: nfe?.clienteE?.cpfCliente,
-        client: nfe?.clienteE?.nome,
-        key_nf: nfe?.nfe,
-        nf: nfe?.notaFiscal,
-        dav: nfe?.numeroDav,
-        pre_nota: nfe?.numeroPreNota,
+        store: user.storeCode,
+        cpf: nfe.clienteE.cpfCliente,
+        client: nfe.clienteE.nome,
+        keyNf: nfe.nfe,
+        nf: nfe.notaFiscal,
+        dav: nfe.numeroDav,
+        preNota: nfe.numeroPreNota,
         status: '1',
-        user_log: user?.username
+        userLog: user.username
       });
 
-      if (response.status === 201) {
+      if (response.status == 201) {
+        setCustomerId(response.data.customerId)
+       
         Toast.show({
           type: 'success',
           text1: 'Customer criado com sucesso',
           visibilityTime: 5000
         })
-        setCustomerId(response.data)
-        navigation.navigate('ScannerNFe');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error ao criar o customer',
-          visibilityTime: 5000
-        })
-        setLoading(false);
-      }
+      } 
     } catch (error) {
-      console.error('Erro ao enviar as imagens:', error);
+      setLoading(false);
       Toast.show({
         type: 'error',
-        text1: 'Erro ao enviar as imagens: ' + error,
+        text1: 'Erro ao criar o customer ' + error,
         visibilityTime: 5000
       });
     }
@@ -151,12 +169,16 @@ export function Dash() {
   const createImageCustomer = async () => {
     try {
       setLoading(true);
-      const response = await axios.post('https://stating-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/customer-image', {
+      console.log(customerId)
+      console.log(awsImage)
+      const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/customer-image', {
         url: awsImage,
         customerPickupId:customerId 
       })
+      console.log(response)
       if (response.status == 200) {
-       setLoading(false);
+        navigation.navigate('ScannerNFe');
+        setLoading(false);
         Toast.show({
           type: 'success',
           text1: 'Processo concluído com sucesso',
@@ -177,6 +199,16 @@ export function Dash() {
   // handleImageSubmit() envio de imagens para aws 
   // createCustomer()
   // createImageCustomer()
+
+  const finishOperation = async () => {
+    setLoading(true);
+
+    await createCustomer()
+    await handleImageSubmit()
+    
+    
+  }
+
   return (
     <Container>
       {loading && (
@@ -214,8 +246,8 @@ export function Dash() {
             </TextSpan>
           </CardInfo>
         ) : <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
+              <ActivityIndicator size="large" color="#0000ff" />
+            </View>
         }
         {
           !loading && (
@@ -243,7 +275,6 @@ export function Dash() {
                       )}
                     </View>
                   )}
-
                   contentContainerStyle={styles.imagesContainer}
                   showsHorizontalScrollIndicator={false}
                 />
@@ -269,7 +300,6 @@ export function Dash() {
             </>
           )
         }
-
       </>
     </Container>
   );

@@ -26,13 +26,13 @@ export function Home() {
   
   const cameraRef = useRef<CameraView>(null);
 
-  const { setNfe, user: { storeCode }, nfe } = useContext(AuthContext)
-
+  const { setNfe, user: { storeCode }, nfe } = useContext(AuthContext);
+  
   const navigation = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
-
+  
   const [cameraStats, setCameraStats] = useState(true);
-
+  
   useEffect(() => {
     return () => {
       if (permission && permission.granted && cameraRef.current) {
@@ -40,7 +40,7 @@ export function Home() {
       }
     };
   }, [permission]);
-
+  
   if (!permission) {
     return <View />;
   }
@@ -55,7 +55,7 @@ export function Home() {
       </View>
     );
   }
-
+  
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
@@ -63,10 +63,12 @@ export function Home() {
   const sendNfe = async (scannerNotaFiscal: string) => {
     try {
       const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
+
       if (res.status == 200) {
         setNfe(res.data[0])
-        console.log(nfe.status)
-        if (nfe != null && nfe.status == null) {
+        console.log(res.data[0].status)
+        
+        if ((res.data[0].status == null)) {
           setLoading(false);
           setCameraStats(true)
           Toast.show({
