@@ -145,7 +145,7 @@ export function Dash() {
         preNota: nfe.numeroPreNota,
         status: '1',
         userLog: user.username,
-        dataEmissao: new Date(nfe.dataEmissao).toLocaleString()
+        dataEmissao: nfe.dataEmissao
       });
 
       if (response.status == 201) {
