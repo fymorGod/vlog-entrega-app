@@ -15,6 +15,7 @@ export interface Nfe {
   numeroPreNota: string;
   romaneio: string;
   status: string | null;
+  dataEmissao: string;
 }
 interface User {
   username: string;
@@ -51,7 +52,8 @@ const initialNfe: Nfe = {
   numeroDav: "",
   numeroPreNota: "",
   romaneio: "",
-  status: ""
+  status: "",
+  dataEmissao: ""
 }
 
 interface AuthProviderProps {
@@ -158,12 +160,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     }
   };
-  
+
   const logout = () => {
     console.log("logout")
     updateToken(null)
     updateUser(null)
-    updateUser(null)
+    updateAuthenticated(null)
     console.log(token)
   }
 
