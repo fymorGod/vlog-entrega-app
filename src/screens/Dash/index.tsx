@@ -82,7 +82,7 @@ export function Dash() {
   const handleImageSubmit = async () => {
    try {
     const currentDate = new Date();
-    imageUris.forEach(async (uri, index) => {
+    imageUris.forEach((uri, index) => {
       const imageName = `photo_${currentDate.getTime()}_${index}.png`;
       const imageFile = {
         uri: uri,
@@ -90,7 +90,7 @@ export function Dash() {
         type: 'image/jpeg'
       };
       // send image file to function for sending to aws bucket
-      await sendToAwsImages(imageFile)
+      sendToAwsImages(imageFile)
       
     });
     
@@ -114,7 +114,7 @@ export function Dash() {
         },
       });
 
-      if (response.status === 200) {
+      if (response.status == 200) {
         setAwsImage(response.data)
         Toast.show({
           type: 'success',
@@ -168,14 +168,10 @@ export function Dash() {
   // Send to DB Images Relations with Customer
   const createImageCustomer = async () => {
     try {
-      setLoading(true);
-      console.log(customerId)
-      console.log(awsImage)
       const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/customer-image', {
         url: awsImage,
         customerPickupId:customerId 
       })
-      console.log(response)
       if (response.status == 200) {
         navigation.navigate('ScannerNFe');
         setLoading(false);
@@ -195,18 +191,11 @@ export function Dash() {
     }
   };
 
-  // finishOperation
-  // handleImageSubmit() envio de imagens para aws 
-  // createCustomer()
-  // createImageCustomer()
-
   const finishOperation = async () => {
     setLoading(true);
 
     await createCustomer()
     await handleImageSubmit()
-    
-    
   }
 
   return (
@@ -245,9 +234,7 @@ export function Dash() {
               <Text style={{ fontSize: 18 }}>{nfe?.numeroPreNota}</Text>
             </TextSpan>
           </CardInfo>
-        ) : <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#0000ff" />
-            </View>
+        ) : null
         }
         {
           !loading && (

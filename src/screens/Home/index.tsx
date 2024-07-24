@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -23,23 +23,14 @@ export function Home() {
   const [permission, requestPermission] = useCameraPermissions();
   const [modalVisible, setModalVisible] = useState(false);
   const [manualEntryValue, setManualEntryValue] = useState("");
-  
-  const cameraRef = useRef<CameraView>(null);
 
-  const { setNfe, user: { storeCode }, nfe } = useContext(AuthContext);
+  const { setNfe, user: { storeCode } } = useContext(AuthContext);
   
   const navigation = useNavigation();
+  
   const [loading, setLoading] = useState<boolean>(false);
   
   const [cameraStats, setCameraStats] = useState(true);
-  
-  useEffect(() => {
-    return () => {
-      if (permission && permission.granted && cameraRef.current) {
-        cameraRef.current._cameraRef.current?.stopRecording;
-      }
-    };
-  }, [permission]);
   
   if (!permission) {
     return <View />;
@@ -60,37 +51,54 @@ export function Home() {
     Keyboard.dismiss();
   };
 
+  const validateStatus = async (barCode: string) => {
+    
+    const response = await fetch(`https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/find-customer-by-key?keyNf=${barCode}`, {
+      method: 'GET', 
+      headers: {
+        'Content-Type': 'application/json', 
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json(); 
+      return data
+    } else {
+      console.error('Erro ao buscar cliente por chave:', response.statusText)
+    }
+  }
+
   const sendNfe = async (scannerNotaFiscal: string) => {
     try {
-      const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
+      const status = await validateStatus(scannerNotaFiscal)
+      if(status.length == 0) {
+        const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
 
-      if (res.status == 200) {
-        setNfe(res.data[0])
-        console.log(res.data[0].status)
-        
-        if ((res.data[0].status == null)) {
-          setLoading(false);
-          setCameraStats(true)
-          Toast.show({
-            type: 'success',
-            text1: 'NFE pronta para cadastro',
-            text1Style: {
-              alignContent: "center"
-            },
-            visibilityTime: 5000
-          });
-          navigation.navigate("Dash")
-        } else {
-          setCameraStats(false)
-          Toast.show({
-            type: 'error',
-            text1: 'NFE já cadastrada no sistema.',
-            visibilityTime: 5000
-          });
+        if (res.status == 200) {
+          setNfe(res.data[0])
+            setLoading(false);
+            setCameraStats(true)
+            Toast.show({
+              type: 'success',
+              text1: 'NFE pronta para cadastro',
+              text1Style: {
+                alignContent: "center"
+              },
+              visibilityTime: 5000
+            });
+            navigation.navigate("Dash")
+          }
+      } else {
+        setCameraStats(false)
+        Toast.show({
+          type: 'error',
+          text1: 'NFE já cadastrada no sistema.',
+          visibilityTime: 5000
+        });
 
-          navigation.navigate("ScannerNFe")
-        }
+        navigation.navigate("ScannerNFe")
       }
+      
     } catch (error) {
       console.log(error)
     }
@@ -100,7 +108,7 @@ export function Home() {
     if (data) {
       setLoading(true);
       setCameraStats(false)
-      sendNfe(data);
+      sendNfe(data)
     } else {
       setLoading(false)
       console.error("O código de barras escaneado é vazio ou indefinido.");
@@ -134,7 +142,7 @@ export function Home() {
             onBarcodeScanned={handleScan}
             style={styles.camera}
             pictureSize={"1920x1080"}
-            ref={cameraRef}
+    
           />
           : null
       }

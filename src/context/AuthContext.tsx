@@ -70,8 +70,6 @@ export const AuthContext = createContext<AuthContextType>({
   logout: () => {}
 });
 
-// const URL_VALIDATE_DATA_SCANNER = "https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?";
-
 export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
@@ -160,6 +158,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     }
   };
+  
   const logout = () => {
     console.log("logout")
     updateToken(null)

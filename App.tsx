@@ -21,7 +21,6 @@ export default function App() {
 }
 
 export const Layout = () => {
-  //const { authState, onLogout, lojaInfo } = useAuth();
   const { token, authenticated, logout, user } = useContext(AuthContext)
 
   return (
