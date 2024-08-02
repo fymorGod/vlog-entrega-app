@@ -34,10 +34,12 @@ export function Dash() {
 
   const [imageUris, setImageUris] = useState<string[]>([]);
 
-  const [awsImage, setAwsImage] = useState<string[]>([]);
-  const [customerId, setCustomerId] = useState<number>();
-  const { current } = useRef(awsImage)
+  const [awsImage, setAwsImage] = useState<string>("");
+  const [customerId, setCustomerId] = useState<number>(0);
+
   const [loading, setLoading] = useState<boolean>(false);
+  
+  const { current } = useRef(awsImage)
 
   const navigation = useNavigation();
 
@@ -74,9 +76,11 @@ export function Dash() {
 
   useEffect(() => {
     if ( current !== awsImage ) {
+      console.log("Chamando relacionamento")
       createImageCustomer()
     }
-  }, [[awsImage]])
+
+  }, [awsImage])
 
   // Send images to AWS
   const handleImageSubmit = async () => {
@@ -91,7 +95,6 @@ export function Dash() {
       };
       // send image file to function for sending to aws bucket
       sendToAwsImages(imageFile)
-      
     });
     
    } catch (error) {
@@ -115,10 +118,11 @@ export function Dash() {
       });
 
       if (response.status == 200) {
-        setAwsImage(response.data)
+        setAwsImage((prevState) => response.data)
+
         Toast.show({
           type: 'success',
-          text1: 'Imagens enviadas com sucesso',
+          text1: `Imagens enviadas com sucesso ${response.data}`,
           visibilityTime: 5000
         })
       }
@@ -174,14 +178,15 @@ export function Dash() {
         customerPickupId:customerId 
       })
       if (response.status == 200) {
-        navigation.navigate('ScannerNFe');
         setLoading(false);
         Toast.show({
           type: 'success',
           text1: 'Processo concluído com sucesso',
           visibilityTime: 5000
-        })
+        });
+        navigation.navigate('ScannerNFe')
       }
+      
     } catch (error) {
       console.log(error)
       Toast.show({
@@ -197,6 +202,7 @@ export function Dash() {
 
     await createCustomer()
     await handleImageSubmit()
+    
   }
 
   return (
