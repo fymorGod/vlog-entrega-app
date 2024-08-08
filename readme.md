@@ -35,3 +35,9 @@
       console.error('Erro ao abrir a galeria:', error);
     }
   };
+
+
+&&
+                (res.data.data.permissions.admin === 1 ||
+                    res.data.data.permissions.exp === 1 ||
+                    res.data.data.permissions.expl === 1)

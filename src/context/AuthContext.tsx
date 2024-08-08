@@ -1,64 +1,12 @@
-import React, { ReactNode, useEffect } from "react";
+import React, { useEffect } from "react";
 import { createContext, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-interface Cliente {
-  id: number;
-  cpfCliente: string;
-  nome: string;
-}
-export interface Nfe {
-  clienteE: Cliente;
-  nfe: string;
-  notaFiscal: number;
-  numeroDav: string;
-  numeroPreNota: string;
-  romaneio: string;
-  status: string | null;
-  dataEmissao: string;
-}
-interface User {
-  username: string;
-  lojaInfo: string;
-  storeCode: string;
-}
-
-interface AuthContextType {
-  token: string | null;
-  authenticated: string | null;
-  setToken: (newToken: string | null) => void;
-  user: User | null;
-  nfe: Nfe | null;
-  setNfe: (newNfe: Nfe | null) => void;
-  setUser: (newUser: User | null) => void;
-  setAuthenticated: (newAuthenticated: string | null) => void;
-  logout: () => void; 
-}
-
-const initialUser: User | null = {
-  lojaInfo: "",
-  storeCode: "",
-  username: ""
-}
-
-const initialNfe: Nfe = {
-  clienteE: {
-    cpfCliente: "",
-    id: 0,
-    nome: ""
-  },
-  nfe: "",
-  notaFiscal: 0,
-  numeroDav: "",
-  numeroPreNota: "",
-  romaneio: "",
-  status: "",
-  dataEmissao: ""
-}
-
-interface AuthProviderProps {
-  children: ReactNode
-}
+import { AuthContextType } from "./interface/ContextType";
+import { initialUser } from "./models/InitialUser";
+import { initialNfe } from "./models/InitialNfe";
+import { AuthProviderProps } from "./interface/ContextProps";
+import { Nfe } from "../interfaces/Nfe";
+import { User } from "../interfaces/User";
 
 export const AuthContext = createContext<AuthContextType>({
   token: null,
@@ -73,6 +21,11 @@ export const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+
+  const [ token, setToken ] = useState<string | null>(null);
+  const [ nfe, setNfe ] = useState<Nfe>(initialNfe);
+  const [ authenticated, setAuthenticated ] = useState<string | null>(null);
+  const [ user, setUser ] = useState<User | null>(null)
 
   useEffect(() => {
     const fetchStoredData = async () => {
@@ -97,15 +50,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   
-  const [ token, setToken ] = useState<string | null>(null);
-
-  const [ nfe, setNfe ] = useState<Nfe>(initialNfe);
-
-  const [ authenticated, setAuthenticated ] = useState<string | null>(null);
-
-  const [ user, setUser ] = useState<User | null>(null)
-
-
   const updateNfe = (newNfe: Nfe | null) => {
     setNfe(newNfe)
   } 
@@ -162,24 +106,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = () => {
-    console.log("logout")
     updateToken(null)
     updateUser(null)
     updateAuthenticated(null)
     console.log(token)
   }
 
-  return <AuthContext.Provider value={{
-    logout,
-    token,
-    setToken: updateToken,
-    user,
-    setUser: updateUser,
-    setAuthenticated: updateAuthenticated,
-    authenticated,
-    nfe,
-    setNfe: updateNfe
-  }}>{children}</AuthContext.Provider>;
+  return(
+    <AuthContext.Provider value={{
+      logout,
+      token,
+      setToken: updateToken,
+      user,
+      setUser: updateUser,
+      setAuthenticated: updateAuthenticated,
+      authenticated,
+      nfe,
+      setNfe: updateNfe
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
-
-

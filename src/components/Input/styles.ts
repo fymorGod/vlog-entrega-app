@@ -13,21 +13,19 @@ export const Container = styled.View`
 
 export const IconContainer = styled.View<Props>`
   height: 56px;
-  width: 55px;
+  width: 56px;
   justify-content: center;
   align-items: center;
   margin-right: 2px;
-  background-color: #FFFFFF; 
+  background-color: #fff; 
   margin-bottom: 20px;
-
 `;
-
 
 export const InputText = styled(TextInput) <Props>`
   width: 65%;
   height: 56px;
   background-color: #FFFFFF;
   color: #7A7A80;
-  padding: 10px 23px; 
+  padding: 10px 10px; 
   margin-bottom: 20px;
 `;

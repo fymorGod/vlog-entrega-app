@@ -32,20 +32,16 @@ export function Login() {
                 username: data.username,
                 password: data.password
             })
-            console.log(res.data.data.permissions.admin)
-            if (res.status == 200 &&
-                (res.data.data.permissions.admin === 1 ||
-                    res.data.data.permissions.exp === 1 ||
-                    res.data.data.permissions.expl === 1)) {
-                
+            if (res.status == 200 ) {
                 setAuthenticated("authenticate")
                 setToken(res.data.data.token)
                 setUser({
                     lojaInfo: res.data.data.store_name,
                     storeCode: res.data.data.store_code,
-                    username: res.data.data.username
+                    username: res.data.data.username,
+                    permission: res.data.data.permissions
                 })
-                navigation.navigate("ScannerNFe")
+                navigation.navigate("Menu")
             }
         } catch (error) {
             console.log(error)
@@ -62,7 +58,7 @@ export function Login() {
             <TouchableWithoutFeedback onPress={dismissKeyboard}>
                 <LinearGradient
                     colors={['#cd0914', '#871015']}
-                    style={{ flex: 1 }} >
+                    style={{ flex: 1 }}>
                     <Container>
                         <ContainerLogo>
                             <Image style={styles.tineLogo} source={require('../../../assets/logo.png')} />
@@ -110,7 +106,7 @@ export function Login() {
                             />
                         </ContainerForm>
                         <ContainerVersion>
-                            <TextSpanVersion>v.1.1.0</TextSpanVersion>
+                            <TextSpanVersion>v.1.1.2</TextSpanVersion>
                         </ContainerVersion>
                     </Container>
                 </LinearGradient>

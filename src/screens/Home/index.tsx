@@ -76,18 +76,18 @@ export function Home() {
         console.log(res.data)
         if (res.status == 200) {
           setNfe(res.data[0])
-            setLoading(false);
-            setCameraStats(true)
-            Toast.show({
-              type: 'success',
-              text1: 'NFE pronta para cadastro',
-              text1Style: {
-                alignContent: "center"
-              },
-              visibilityTime: 5000
-            });
-            navigation.navigate("Dash")
-          }
+          setLoading(false);
+          setCameraStats(true)
+          Toast.show({
+            type: 'success',
+            text1: 'NFE pronta para cadastro',
+            text1Style: {
+              alignContent: "center"
+            },
+            visibilityTime: 5000
+          });
+          navigation.navigate("Dash")
+        }
       } else {
         setCameraStats(false)
         Toast.show({
