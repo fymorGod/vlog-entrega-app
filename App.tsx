@@ -22,7 +22,7 @@ export default function App() {
     </AuthProvider>
   );
 }
-
+// layout app
 export const Layout = () => {
   const { token, authenticated, logout, user } = useContext(AuthContext)
 
