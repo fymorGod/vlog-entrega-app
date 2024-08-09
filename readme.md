@@ -41,3 +41,6 @@
                 (res.data.data.permissions.admin === 1 ||
                     res.data.data.permissions.exp === 1 ||
                     res.data.data.permissions.expl === 1)
+
+
+                    vault_authentication=TOKEN;vault_configimport=vault://;vault_enabled=true;vault_host=staging-potiguar-vault.portela-professional.com.br;vault_kv_backend=staging;vault_kv_default_context=mcs-eportal-retirada-cliente-api;vault_port=8200;vault_token=8cdac604-c40c-4126-816a-e958749faed6
