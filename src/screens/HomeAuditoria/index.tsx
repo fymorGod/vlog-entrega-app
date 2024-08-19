@@ -46,6 +46,9 @@ export const HomeAuditoria = () => {
             console.error("O código de barras escaneado é vazio ou indefinido.");
         }
     }
+
+    // Get dados do romaneio 
+    
     return (
         <View style={styles.container}>
             {loading && (

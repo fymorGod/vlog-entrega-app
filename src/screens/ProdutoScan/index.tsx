@@ -92,6 +92,8 @@ export const ProdutoScan = () => {
         }
     }
 
+    // Logic: 
+
     return (
         <View style={styles.container}>
             {loading && (
