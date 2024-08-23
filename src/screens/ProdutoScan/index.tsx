@@ -108,7 +108,6 @@ export const ProdutoScan = () => {
                         onBarcodeScanned={handleScan}
                         style={styles.camera}
                         pictureSize={"1920x1080"}
-
                     />
                     : null
             }
@@ -147,7 +146,7 @@ export const ProdutoScan = () => {
                                 icon="search"
                                 onChangeText={(text) => setManualEntryValue(text)}
                                 value={manualEntryValue}
-                                placeholder="Preencha com a NF-E"
+                                placeholder="Digite o romaneio"
                             />
                             <View style={{ flexDirection: "row" }}>
                                 <View style={{ width: "50%" }}>
