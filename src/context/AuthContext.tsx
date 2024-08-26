@@ -7,12 +7,16 @@ import { initialNfe } from "./models/InitialNfe";
 import { AuthProviderProps } from "./interface/ContextProps";
 import { Nfe } from "../interfaces/Nfe";
 import { User } from "../interfaces/User";
+import { Audititem } from "../interfaces/AuditoriaItem";
+import { initialAuditItem } from "./models/initialAuditItem";
 
 export const AuthContext = createContext<AuthContextType>({
   token: null,
   user: initialUser,
   authenticated: null,
   nfe: initialNfe,
+  auditItem: [],
+  setAuditItem: () => {},
   setUser: () => {},
   setToken: () => {},
   setAuthenticated: ()=> {},
@@ -20,12 +24,14 @@ export const AuthContext = createContext<AuthContextType>({
   logout: () => {}
 });
 
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const [ token, setToken ] = useState<string | null>(null);
   const [ nfe, setNfe ] = useState<Nfe>(initialNfe);
   const [ authenticated, setAuthenticated ] = useState<string | null>(null);
   const [ user, setUser ] = useState<User | null>(null)
+  const [ auditItem, setAuditItem ] = useState<Audititem[]>([]);
 
   useEffect(() => {
     const fetchStoredData = async () => {
@@ -53,6 +59,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const updateNfe = (newNfe: Nfe | null) => {
     setNfe(newNfe)
   } 
+
+  const updateAuditItem = (newAuditItems: Audititem[] | null) => {
+    setAuditItem(newAuditItems || []);
+  };
 
   const updateToken = async (newToken: string | null) => {
     setToken(newToken);
@@ -118,6 +128,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       token,
       setToken: updateToken,
       user,
+      auditItem,
+      setAuditItem: updateAuditItem,
       setUser: updateUser,
       setAuthenticated: updateAuthenticated,
       authenticated,

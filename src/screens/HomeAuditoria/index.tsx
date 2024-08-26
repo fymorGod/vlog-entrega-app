@@ -1,10 +1,12 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { ActivityIndicator, Keyboard, Modal, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
 import { Button } from "../../components/Button";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import { Input } from "../../components/Input";
 import { useNavigation } from "@react-navigation/native";
+import { AuthContext } from "../../context/AuthContext";
+import axios from "axios";
 
 export const HomeAuditoria = () => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -12,6 +14,7 @@ export const HomeAuditoria = () => {
     const [cameraStats, setCameraStats] = useState<boolean>(true);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [manualEntryValue, setManualEntryValue] = useState<string>("");
+    const { setAuditItem } = useContext(AuthContext);
 
     const navigation = useNavigation();
 
@@ -33,10 +36,20 @@ export const HomeAuditoria = () => {
     const dismissKeyboard = () => {
         Keyboard.dismiss();
     };
+    
+    const getDataAuditoriaItem = async (romaneio: string) => {
+        try {
+            const response = await axios.get(`http://192.168.102.14:8080/api/v1/auditoria/details?romaneio=${romaneio}`);
+            setAuditItem(response.data);
+        } catch (error) {
+            console.error('Erro ao fazer a requisição:', error.message);
+        }
+    };
+
 
     async function handleScan({ data }: BarCodeScannerResult) {
         if (data) {
-            console.log(data)
+            getDataAuditoriaItem(data)
             setLoading(true);
             setCameraStats(false)
             if (data) setLoading(false);

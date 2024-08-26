@@ -10,28 +10,13 @@ import {
     View
 } from "react-native";
 import { Button } from "../../components/Button";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import { Input } from "../../components/Input";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
-
-interface Audititem {
-    id: number;
-    romaneio: string;
-    codProduto: string;
-    descricao: string;
-    emb: string | null;
-    eanProduto: string | null;
-    qtdItens: number;
-    qtdConferida: number;
-    conferida: string;
-    qtdAuditada: number;
-    auditado: string;
-    codBarrasIu: string;
-    createdAt: string;
-    updatedAt: string;
-}
+import { Audititem } from "../../interfaces/AuditoriaItem";
+import { AuthContext } from "../../context/AuthContext";
 
 export const ProdutoScan = () => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -43,28 +28,39 @@ export const ProdutoScan = () => {
     const [manualProduto, setManualProduto] = useState<string>("");
     const [filteredItems, setFilteredItems] = useState<Audititem[]>([]);
     const navigation = useNavigation();
-    const [auditItem, setAuditItem] = useState<Audititem[]>([]);
+    //const [auditItem, setAuditItem] = useState<Audititem[]>([]);
+    
+    const { auditItem } = useContext(AuthContext);
 
-    useEffect(() => {
-        const getDataAuditoriaItem = async () => {
-            try {
-                const response = await axios.get("http://192.168.102.14:8080/api/v1/auditoria/get");
-                setAuditItem(response.data);
-                filterItems(response.data); // Inicialmente filtra os itens quando os dados são carregados
-            } catch (error) {
-                console.error('Erro ao fazer a requisição:', error.message);
-            }
-        };
-        getDataAuditoriaItem();
-    }, []);
+    // useEffect(() => {
+    //     const getDataAuditoriaItem = async () => {
+    //         try {
+    //             const response = await axios.get("http://192.168.102.14:8080/api/v1/auditoria/get");
+    //             setAuditItem(response.data);
+    //             filterItems(response.data);
+    //         } catch (error) {
+    //             console.error('Erro ao fazer a requisição:', error.message);
+    //         }
+    //     };
+    //     getDataAuditoriaItem();
+    // }, []);
 
     const filterItems = (items: Audititem[]) => {
         const filtered = items.filter(item => item.qtdItens !== item.qtdConferida);
         setFilteredItems(filtered);
     };
 
+    const updateConferencia = async (id: number, qtdConf: number) => {
+        const response = await axios.put('http://192.168.102.14:8080/api/v1/auditoria/edit-conferencia', {
+            id: id,
+            qtdConferida: qtdConf,
+            conferido: "S"
+        });
+        console.log(response.data)
+    }
+
     const finalizarConferencia = async () => {
-        filterItems(auditItem); // Atualiza a lista filtrada
+        filterItems(auditItem);
         const erros: string[] = [];
         filteredItems.forEach((item) => {
             if (item.qtdItens !== item.qtdConferida) {
@@ -77,7 +73,7 @@ export const ProdutoScan = () => {
         } else {
             setCameraStats(false)
             setLoadingFlatlist(true);
-            setModalConfirmacao(true); // Exibe o modal de confirmação se houver erros
+            setModalConfirmacao(true);
             console.log("Erro", `Os seguintes itens não foram conferidos corretamente: ${erros.join(", ")}`);
         }
     };
@@ -87,9 +83,7 @@ export const ProdutoScan = () => {
             <Text style={styles.itemText}>Romaneio: {item.romaneio}</Text>
             <Text style={styles.itemText}>Código do Produto: {item.codProduto}</Text>
             <Text style={styles.itemText}>Descrição: {item.descricao}</Text>
-            <Text style={styles.itemText}>Quantidade Itens: {item.qtdItens}</Text>
-            <Text style={styles.itemText}>Quantidade Conferida: {item.qtdConferida}</Text>
-            {/* Adicione mais campos conforme necessário */}
+            <Text style={styles.itemTextWrong}>Quantidade Conferida: {item.qtdConferida == null ? '0' : item.qtdConferida}</Text>
         </View>
     );
 
@@ -104,7 +98,7 @@ export const ProdutoScan = () => {
             visible={modalConfirmacao}
             onRequestClose={() => {
                 setModalConfirmacao(false);
-                setLoadingFlatlist(false); // Opcional: Resetar o estado ao fechar o modal
+                setLoadingFlatlist(false); 
             }}
         >
             <View style={styles.modalBackground}>
@@ -119,7 +113,7 @@ export const ProdutoScan = () => {
                         />
                     )}
                     <Button
-                        title="Fechar"
+                        title="Reconferir"
                         onPress={() => {
                             setModalConfirmacao(false);
                             setLoadingFlatlist(false); 
@@ -131,7 +125,7 @@ export const ProdutoScan = () => {
         </Modal>
     );
 
-    const renderModalQTDProduto = () => (
+    const renderModalQTDProduto = (item: number) => (
         <Modal
             animationType="slide"
             transparent={true}
@@ -151,7 +145,7 @@ export const ProdutoScan = () => {
                         />
                         <View style={{ flexDirection: "row" }}>
                             <View style={{ width: "50%" }}>
-                                <Button title="Enviar" onPress={() => { /* Lógica de envio */ }} />
+                                <Button title="Enviar" onPress={() => {updateConferencia(item, parseInt(manualProduto))}} />
                             </View>
                             <View style={{ width: "50%" }}>
                                 <Button
@@ -224,7 +218,9 @@ export const ProdutoScan = () => {
                     </View>
                 </View>
             )}
-            {renderModalQTDProduto()}
+            {auditItem.map((item) => {
+                return renderModalQTDProduto(item.id)
+            })}
             {renderModalConfirmacao()}
         </View>
     );
@@ -250,6 +246,11 @@ const styles = StyleSheet.create({
     itemText: {
         fontSize: 16,
         marginBottom: 4,
+    },
+    itemTextWrong: {
+        fontSize: 16,
+        marginBottom: 4,
+        color: '#ff0000'
     },
     camera: {
         flex: 1,
