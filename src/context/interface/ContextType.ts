@@ -4,6 +4,8 @@ import { User } from "../../interfaces/User";
 
 export interface AuthContextType {
     token: string | null;
+    romaneio: string | null;
+    setRomaneio: (newRomaneio: string | null) => void;
     authenticated: string | null;
     setToken: (newToken: string | null) => void;
     user: User | null;

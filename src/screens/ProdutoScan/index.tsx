@@ -1,6 +1,7 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     Keyboard,
     Modal,
@@ -24,43 +25,44 @@ export const ProdutoScan = () => {
     const [loadingFlatlist, setLoadingFlatlist] = useState<boolean>(false);
     const [cameraStats, setCameraStats] = useState<boolean>(true);
     const [modalInfo, setModalInfo] = useState<boolean>(false);
-    const [modalConfirmacao, setModalConfirmacao] = useState<boolean>(false); // Novo modal para inserção de quantidade
+    const [modalConfirmacao, setModalConfirmacao] = useState<boolean>(false);
     const [manualProduto, setManualProduto] = useState<string>("");
+    const [codBarr, setCodBarr] = useState<Audititem>();
     const [filteredItems, setFilteredItems] = useState<Audititem[]>([]);
     const navigation = useNavigation();
     //const [auditItem, setAuditItem] = useState<Audititem[]>([]);
     
-    const { auditItem } = useContext(AuthContext);
-
-    // useEffect(() => {
-    //     const getDataAuditoriaItem = async () => {
-    //         try {
-    //             const response = await axios.get("http://192.168.102.14:8080/api/v1/auditoria/get");
-    //             setAuditItem(response.data);
-    //             filterItems(response.data);
-    //         } catch (error) {
-    //             console.error('Erro ao fazer a requisição:', error.message);
-    //         }
-    //     };
-    //     getDataAuditoriaItem();
-    // }, []);
+    const { auditItem, romaneio } = useContext(AuthContext);
 
     const filterItems = (items: Audititem[]) => {
         const filtered = items.filter(item => item.qtdItens !== item.qtdConferida);
         setFilteredItems(filtered);
     };
 
-    const updateConferencia = async (id: number, qtdConf: number) => {
-        const response = await axios.put('http://192.168.102.14:8080/api/v1/auditoria/edit-conferencia', {
+    const updateAuditoria = async (id: number, qtdConf: number) => {
+        setCameraStats(false);
+        const response = await axios.put('http://192.168.102.14:8080/api/v1/auditoria/edit', {
             id: id,
-            qtdConferida: qtdConf,
-            conferido: "S"
+            qtdAuditada: qtdConf,
+            auditado: "S"
         });
-        console.log(response.data)
+        console.log(response.data);
+        Alert.alert("Produto Auditados");
+        setCameraStats(true);
+        setModalInfo(false);
     }
 
-    const finalizarConferencia = async () => {
-        filterItems(auditItem);
+    const getDataAuditoriaItem = async () => {
+        try {
+            const response = await axios.get(`http://192.168.102.14:8080/api/v1/auditoria/details?romaneio=${romaneio}`);
+            filterItems(response.data);
+        } catch (error) {
+            console.error('Erro ao fazer a requisição:', error.message);
+        }
+    };
+
+    const finalizarAuditoria = async () => {
+        await getDataAuditoriaItem()
         const erros: string[] = [];
         filteredItems.forEach((item) => {
             if (item.qtdItens !== item.qtdConferida) {
@@ -68,13 +70,13 @@ export const ProdutoScan = () => {
             }
         });
         if (erros.length === 0) {
-            console.log("Sucesso", "Todos os itens foram conferidos!");
+            console.log("Sucesso", "Todos os itens foram auditados!");
             navigation.navigate('Auditoria');
         } else {
             setCameraStats(false)
             setLoadingFlatlist(true);
             setModalConfirmacao(true);
-            console.log("Erro", `Os seguintes itens não foram conferidos corretamente: ${erros.join(", ")}`);
+            console.log("Erro", `Os seguintes itens não foram auditados corretamente: ${erros.join(", ")}`);
         }
     };
 
@@ -125,7 +127,7 @@ export const ProdutoScan = () => {
         </Modal>
     );
 
-    const renderModalQTDProduto = (item: number) => (
+    const renderModalQTDProduto = (item: number, productName: string) => (
         <Modal
             animationType="slide"
             transparent={true}
@@ -137,15 +139,16 @@ export const ProdutoScan = () => {
             <TouchableWithoutFeedback onPress={dismissKeyboard}>
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
+                        <Text>{productName}</Text>
                         <Input
                             icon="search"
                             onChangeText={(text) => setManualProduto(text)}
                             value={manualProduto}
                             placeholder="Quantidade do produto"
                         />
-                        <View style={{ flexDirection: "row" }}>
+                        <View style={{ flexDirection: "row", marginTop: -50}}>
                             <View style={{ width: "50%" }}>
-                                <Button title="Enviar" onPress={() => {updateConferencia(item, parseInt(manualProduto))}} />
+                                <Button title="Enviar" onPress={() => {updateAuditoria(item, parseInt(manualProduto))}} />
                             </View>
                             <View style={{ width: "50%" }}>
                                 <Button
@@ -165,10 +168,12 @@ export const ProdutoScan = () => {
 
     async function handleScan({ data }: BarCodeScannerResult) {
         if (data) {
-            console.log(data);
+            const foundItem = auditItem.find(item => item.codBarrasIu === data);
+            setCodBarr(foundItem);
+
             setLoading(true);
             setCameraStats(false);
-            setModalInfo(true); // Exibe o modal para inserir a quantidade
+            setModalInfo(true); 
             setLoading(false);
         } else {
             setLoading(false);
@@ -212,15 +217,13 @@ export const ProdutoScan = () => {
                         <View style={{ width: "100%", marginLeft: 15 }}>
                             <Button
                                 title="Finalizar"
-                                onPress={finalizarConferencia}
+                                onPress={finalizarAuditoria}
                             />
                         </View>
                     </View>
                 </View>
             )}
-            {auditItem.map((item) => {
-                return renderModalQTDProduto(item.id)
-            })}
+            {codBarr && renderModalQTDProduto(codBarr.id, codBarr.descricao)}
             {renderModalConfirmacao()}
         </View>
     );

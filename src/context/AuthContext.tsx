@@ -15,7 +15,9 @@ export const AuthContext = createContext<AuthContextType>({
   user: initialUser,
   authenticated: null,
   nfe: initialNfe,
+  romaneio: null,
   auditItem: [],
+  setRomaneio: () => {},
   setAuditItem: () => {},
   setUser: () => {},
   setToken: () => {},
@@ -28,6 +30,7 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const [ token, setToken ] = useState<string | null>(null);
+  const [ romaneio, setRomaneio ] = useState<string | null>(null);
   const [ nfe, setNfe ] = useState<Nfe>(initialNfe);
   const [ authenticated, setAuthenticated ] = useState<string | null>(null);
   const [ user, setUser ] = useState<User | null>(null)
@@ -63,6 +66,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const updateAuditItem = (newAuditItems: Audititem[] | null) => {
     setAuditItem(newAuditItems || []);
   };
+  const updateRomaneio = async (newRomaneio: string | null) => {
+    setRomaneio(newRomaneio);
+  }
 
   const updateToken = async (newToken: string | null) => {
     setToken(newToken);
@@ -128,6 +134,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       token,
       setToken: updateToken,
       user,
+      romaneio,
+      setRomaneio: updateRomaneio,
       auditItem,
       setAuditItem: updateAuditItem,
       setUser: updateUser,
