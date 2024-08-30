@@ -28,7 +28,7 @@ export const ProdutoScan = () => {
     const [modalConfirmacao, setModalConfirmacao] = useState<boolean>(false);
     const [manualProduto, setManualProduto] = useState<string>("");
     const [codBarr, setCodBarr] = useState<Audititem>();
-    const [filteredItems, setFilteredItems] = useState<Audititem[]>([]);
+    const [filteredItems, setFilteredItems] = useState([]);
     const navigation = useNavigation();
     //const [auditItem, setAuditItem] = useState<Audititem[]>([]);
     
@@ -36,16 +36,18 @@ export const ProdutoScan = () => {
 
     const filterItems = (items: Audititem[]) => {
         const filtered = items.filter(item => item.qtdItens !== item.qtdConferida);
-        setFilteredItems(filtered);
+       
+        return filtered;
     };
 
-    const updateAuditoria = async (id: number, qtdConf: number) => {
+    const updateAuditoria = async (id: number, qtdAudit: number, codBarraIu: string, qtdAuditAnt: number) => {
         setCameraStats(false);
         const response = await axios.put('http://192.168.102.14:8080/api/v1/auditoria/edit', {
             id: id,
-            qtdAuditada: qtdConf,
-            auditado: "S"
+            qtdAuditada: qtdAudit + qtdAuditAnt,
+            eanProduto: codBarraIu
         });
+
         console.log(response.data);
         Alert.alert("Produto Auditados");
         setCameraStats(true);
@@ -54,24 +56,40 @@ export const ProdutoScan = () => {
 
     const getDataAuditoriaItem = async () => {
         try {
-            const response = await axios.get(`http://192.168.102.14:8080/api/v1/auditoria/details?romaneio=${romaneio}`);
-            filterItems(response.data);
+            const response = await axios.get(`http://192.168.102.14:8080/api/v1/auditoria/romaneio?romaneio=${romaneio}`);
+            console.log(response.data)
+
+            setFilteredItems(response.data)
+            return filterItems(response.data);
         } catch (error) {
             console.error('Erro ao fazer a requisição:', error.message);
         }
     };
 
+    const updateAuditado = async () => {
+        try {
+            const response = await axios.put(`http://192.168.102.14:8080/api/v1/auditoria/audited?romaneio=${romaneio}`);
+            console.log(response.data)
+            if(response.status == 200) {
+                navigation.navigate('Auditoria');
+            }
+        } catch (error) {
+            console.error('Erro ao fazer a requisição:', error.message);
+        }
+    }
+
     const finalizarAuditoria = async () => {
-        await getDataAuditoriaItem()
+        const res = await getDataAuditoriaItem();
+        console.log(filteredItems)
         const erros: string[] = [];
-        filteredItems.forEach((item) => {
-            if (item.qtdItens !== item.qtdConferida) {
+        res.forEach((item) => {
+            if (item.qtdItens !== item.qtdAuditada) {
                 erros.push(item.descricao);
             }
         });
         if (erros.length === 0) {
             console.log("Sucesso", "Todos os itens foram auditados!");
-            navigation.navigate('Auditoria');
+            //await updateAuditado();
         } else {
             setCameraStats(false)
             setLoadingFlatlist(true);
@@ -85,7 +103,7 @@ export const ProdutoScan = () => {
             <Text style={styles.itemText}>Romaneio: {item.romaneio}</Text>
             <Text style={styles.itemText}>Código do Produto: {item.codProduto}</Text>
             <Text style={styles.itemText}>Descrição: {item.descricao}</Text>
-            <Text style={styles.itemTextWrong}>Quantidade Conferida: {item.qtdConferida == null ? '0' : item.qtdConferida}</Text>
+            <Text style={styles.itemTextWrong}>Quantidade Conferida: {item.qtdAuditada == null ? '0' : item.qtdAuditada}</Text>
         </View>
     );
 
@@ -127,7 +145,7 @@ export const ProdutoScan = () => {
         </Modal>
     );
 
-    const renderModalQTDProduto = (item: number, productName: string) => (
+    const renderModalQTDProduto = (item: number, productName: string, codBarraIu: string, qtdAuditAnt: number) => (
         <Modal
             animationType="slide"
             transparent={true}
@@ -148,7 +166,7 @@ export const ProdutoScan = () => {
                         />
                         <View style={{ flexDirection: "row", marginTop: -50}}>
                             <View style={{ width: "50%" }}>
-                                <Button title="Enviar" onPress={() => {updateAuditoria(item, parseInt(manualProduto))}} />
+                                <Button title="Enviar" onPress={() => {updateAuditoria(item, parseInt(manualProduto), codBarraIu, qtdAuditAnt)}} />
                             </View>
                             <View style={{ width: "50%" }}>
                                 <Button
@@ -223,7 +241,7 @@ export const ProdutoScan = () => {
                     </View>
                 </View>
             )}
-            {codBarr && renderModalQTDProduto(codBarr.id, codBarr.descricao)}
+            {codBarr && renderModalQTDProduto(codBarr.id, codBarr.descricao, codBarr.codBarrasIu, codBarr.qtdAuditada)}
             {renderModalConfirmacao()}
         </View>
     );
