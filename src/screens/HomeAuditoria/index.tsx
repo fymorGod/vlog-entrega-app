@@ -1,13 +1,22 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { ActivityIndicator, Keyboard, Modal, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
+import { 
+    ActivityIndicator, 
+    Keyboard,
+    Modal, 
+    StyleSheet,
+    Text, 
+    TouchableWithoutFeedback, 
+    View } from "react-native";
 import { Button } from "../../components/Button";
 import { useContext, useState } from "react";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import { Input } from "../../components/Input";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../context/AuthContext";
-import axios from "axios";
 import { Audititem } from "../../interfaces/AuditoriaItem";
+
+import axios from "axios";
+import Toast from "react-native-toast-message";
 
 export const HomeAuditoria = () => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -41,6 +50,7 @@ export const HomeAuditoria = () => {
     const getDataAuditoriaItem = async (romaneio: string) => {
         try {
             const response = await axios.get<Audititem[]>(`http://192.168.102.14:8080/api/v1/auditoria/details?romaneio=${romaneio}`);
+            
             setRomaneio(response.data[0].romaneio)
             setAuditItem(response.data);
         } catch (error) {
@@ -57,12 +67,14 @@ export const HomeAuditoria = () => {
             navigation.navigate("ProdutoScan")
         } else {
             setLoading(false)
-            console.error("O código de barras escaneado é vazio ou indefinido.");
+            Toast.show({
+                type: 'error',
+                text1: 'O código de barras escaneado é vazio ou indefinido.',
+                visibilityTime: 5000
+              });
         }
     }
 
-    // Get dados do romaneio 
-    
     return (
         <View style={styles.container}>
             {loading && (
@@ -73,11 +85,20 @@ export const HomeAuditoria = () => {
             )}
             {
                 cameraStats ?
-                    <CameraView
-                        onBarcodeScanned={handleScan}
-                        style={styles.camera}
-                        pictureSize={"1920x1080"}
-                    />
+                <CameraView
+                onBarcodeScanned={handleScan}
+                style={styles.camera}
+                pictureSize={"1920x1080"}
+                >
+                    <Text style={{
+                        backgroundColor: 'transparent', 
+                        textAlign: 'center', 
+                        fontSize: 20,
+                        color: '#ffffff6c'
+                        }}>
+                        Scanear o Romaneio
+                    </Text>
+                </CameraView>
                     : null
             }
             {
@@ -116,7 +137,7 @@ export const HomeAuditoria = () => {
                 icon="search"
                 onChangeText={(text) => setManualEntryValue(text)}
                 value={manualEntryValue}
-                placeholder="Preencha com a NF-E"
+                placeholder="Preencha com o Romaneio"
               />
               <View style={{ flexDirection: "row" }}>
                 <View style={{ width: "50%" }}>
@@ -148,6 +169,8 @@ const styles = StyleSheet.create({
     camera: {
         flex: 1,
         width: "100%",
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     loadingContainer: {
         ...StyleSheet.absoluteFillObject,

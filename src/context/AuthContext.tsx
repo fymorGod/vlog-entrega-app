@@ -8,7 +8,6 @@ import { AuthProviderProps } from "./interface/ContextProps";
 import { Nfe } from "../interfaces/Nfe";
 import { User } from "../interfaces/User";
 import { Audititem } from "../interfaces/AuditoriaItem";
-import { initialAuditItem } from "./models/initialAuditItem";
 
 export const AuthContext = createContext<AuthContextType>({
   token: null,

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "vlog-entrega-app",
-    "slug": "vlog-entrega-app",
-    "version": "1.0.1",
+    "name": "vlog-v2-app",
+    "slug": "vlog-v2-app",
+    "version": "v2.0.0",
     "platforms": [
       "ios",
       "android",
@@ -45,7 +45,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "54d71bf4-41d6-4ce3-ac97-5e76f5519c73"
+        "projectId": "8d65edf2-5ef3-4053-bcb2-75c4388abb8d"
       }
     }
   }

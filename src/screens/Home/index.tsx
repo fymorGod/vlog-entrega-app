@@ -73,11 +73,10 @@ export function Home() {
       const status = await validateStatus(scannerNotaFiscal)
       if(status.length == 0) {
         const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
-        console.log(res.data)
-        if (res.status == 200) {
-          setNfe(res.data[0])
+        if (res.status == 200 && res.data.length > 0) {
+          setNfe(res.data[0]);
           setLoading(false);
-          setCameraStats(true)
+          setCameraStats(true);
           Toast.show({
             type: 'success',
             text1: 'NFE pronta para cadastro',
@@ -87,6 +86,15 @@ export function Home() {
             visibilityTime: 5000
           });
           navigation.navigate("Dash")
+        } else {
+          setCameraStats(false)
+          Toast.show({
+            type: 'error',
+            text1: 'Error na leitura!',
+            visibilityTime: 5000
+          });
+
+          navigation.navigate("ScannerNFe")
         }
       } else {
         setCameraStats(false)
@@ -122,7 +130,7 @@ export function Home() {
       setLoading(true)
       sendNfe(textValid);
       setModalVisible(false);
-      setCameraStats(false)
+      setCameraStats(false);
     } else {
       setLoading(false)
       setModalVisible(false);

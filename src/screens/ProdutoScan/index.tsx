@@ -1,7 +1,6 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     Keyboard,
     Modal,
@@ -11,13 +10,14 @@ import {
     View
 } from "react-native";
 import { Button } from "../../components/Button";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import { Input } from "../../components/Input";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { Audititem } from "../../interfaces/AuditoriaItem";
 import { AuthContext } from "../../context/AuthContext";
+import Toast from "react-native-toast-message";
 
 export const ProdutoScan = () => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -28,15 +28,15 @@ export const ProdutoScan = () => {
     const [modalConfirmacao, setModalConfirmacao] = useState<boolean>(false);
     const [manualProduto, setManualProduto] = useState<string>("");
     const [codBarr, setCodBarr] = useState<Audititem>();
-    const [filteredItems, setFilteredItems] = useState([]);
+    const [dadosFiltrados, setDadosFiltrados] = useState([]);
     const navigation = useNavigation();
-    //const [auditItem, setAuditItem] = useState<Audititem[]>([]);
-    
+
     const { auditItem, romaneio } = useContext(AuthContext);
 
     const filterItems = (items: Audititem[]) => {
-        const filtered = items.filter(item => item.qtdItens !== item.qtdConferida);
-       
+        const filtered = items.filter(item => item.qtdItens !== item.qtdAuditada);
+        console.log(filtered)
+        setDadosFiltrados(filtered)
         return filtered;
     };
 
@@ -49,7 +49,11 @@ export const ProdutoScan = () => {
         });
 
         console.log(response.data);
-        Alert.alert("Produto Auditados");
+        Toast.show({
+          type: 'success',
+          text1: 'Produto auditado com sucesso',
+          visibilityTime: 5000
+        });
         setCameraStats(true);
         setModalInfo(false);
     }
@@ -57,9 +61,7 @@ export const ProdutoScan = () => {
     const getDataAuditoriaItem = async () => {
         try {
             const response = await axios.get(`http://192.168.102.14:8080/api/v1/auditoria/romaneio?romaneio=${romaneio}`);
-            console.log(response.data)
-
-            setFilteredItems(response.data)
+            
             return filterItems(response.data);
         } catch (error) {
             console.error('Erro ao fazer a requisição:', error.message);
@@ -71,6 +73,11 @@ export const ProdutoScan = () => {
             const response = await axios.put(`http://192.168.102.14:8080/api/v1/auditoria/audited?romaneio=${romaneio}`);
             console.log(response.data)
             if(response.status == 200) {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Processo concluído com sucesso',
+                    visibilityTime: 5000
+                  });
                 navigation.navigate('Auditoria');
             }
         } catch (error) {
@@ -80,13 +87,13 @@ export const ProdutoScan = () => {
 
     const finalizarAuditoria = async () => {
         const res = await getDataAuditoriaItem();
-        console.log(filteredItems)
         const erros: string[] = [];
         res.forEach((item) => {
             if (item.qtdItens !== item.qtdAuditada) {
                 erros.push(item.descricao);
             }
         });
+
         if (erros.length === 0) {
             console.log("Sucesso", "Todos os itens foram auditados!");
             //await updateAuditado();
@@ -103,6 +110,7 @@ export const ProdutoScan = () => {
             <Text style={styles.itemText}>Romaneio: {item.romaneio}</Text>
             <Text style={styles.itemText}>Código do Produto: {item.codProduto}</Text>
             <Text style={styles.itemText}>Descrição: {item.descricao}</Text>
+            <Text style={styles.itemText}>Embalagem: {item.emb}</Text>
             <Text style={styles.itemTextWrong}>Quantidade Conferida: {item.qtdAuditada == null ? '0' : item.qtdAuditada}</Text>
         </View>
     );
@@ -127,7 +135,7 @@ export const ProdutoScan = () => {
                         <ActivityIndicator size="large" color="#2294ff" />
                     ) : (
                         <FlatList
-                            data={filteredItems}
+                            data={dadosFiltrados}
                             renderItem={renderItem}
                             keyExtractor={(item) => item.id.toString()}
                         />
@@ -137,6 +145,7 @@ export const ProdutoScan = () => {
                         onPress={() => {
                             setModalConfirmacao(false);
                             setLoadingFlatlist(false); 
+                            setCameraStats(true)
                             navigation.navigate('Auditoria');
                         }}
                     />
@@ -145,7 +154,7 @@ export const ProdutoScan = () => {
         </Modal>
     );
 
-    const renderModalQTDProduto = (item: number, productName: string, codBarraIu: string, qtdAuditAnt: number) => (
+    const renderModalQTDProduto = (item: number, productName: string, codBarraIu: string, qtdAuditAnt: number, codProduto: string) => (
         <Modal
             animationType="slide"
             transparent={true}
@@ -158,6 +167,7 @@ export const ProdutoScan = () => {
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
                         <Text>{productName}</Text>
+                        <Text>{codProduto}</Text>
                         <Input
                             icon="search"
                             onChangeText={(text) => setManualProduto(text)}
@@ -189,6 +199,7 @@ export const ProdutoScan = () => {
             const foundItem = auditItem.find(item => item.codBarrasIu === data);
             setCodBarr(foundItem);
 
+            // variáveis de controle de fluxo
             setLoading(true);
             setCameraStats(false);
             setModalInfo(true); 
@@ -227,7 +238,16 @@ export const ProdutoScan = () => {
                     onBarcodeScanned={handleScan}
                     style={styles.camera}
                     pictureSize={"1920x1080"}
-                />
+                >
+                    <Text style={{
+                        backgroundColor: 'transparent', 
+                        textAlign: 'center', 
+                        fontSize: 20,
+                        color: '#ffffff6c'
+                        }}>
+                        Scanear Código do Produto
+                    </Text>
+                </CameraView>
             )}
             {!loading && (
                 <View style={styles.barcodeDataContainer}>
@@ -241,7 +261,7 @@ export const ProdutoScan = () => {
                     </View>
                 </View>
             )}
-            {codBarr && renderModalQTDProduto(codBarr.id, codBarr.descricao, codBarr.codBarrasIu, codBarr.qtdAuditada)}
+            {codBarr && renderModalQTDProduto(codBarr.id, codBarr.descricao, codBarr.codBarrasIu, codBarr.qtdAuditada, codBarr.codProduto)}
             {renderModalConfirmacao()}
         </View>
     );
@@ -276,6 +296,8 @@ const styles = StyleSheet.create({
     camera: {
         flex: 1,
         width: "100%",
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     loadingContainer: {
         ...StyleSheet.absoluteFillObject,
