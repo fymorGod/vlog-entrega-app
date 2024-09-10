@@ -29,13 +29,13 @@ export const ProdutoScan = () => {
     const [manualProduto, setManualProduto] = useState<string>("");
     const [codBarr, setCodBarr] = useState<Audititem>();
     const [dadosFiltrados, setDadosFiltrados] = useState([]);
+
     const navigation = useNavigation();
 
-    const { auditItem, romaneio } = useContext(AuthContext);
+    const { auditItem, romaneio, user } = useContext(AuthContext);
 
     const filterItems = (items: Audititem[]) => {
         const filtered = items.filter(item => item.qtdItens !== item.qtdAuditada);
-        console.log(filtered)
         setDadosFiltrados(filtered)
         return filtered;
     };
@@ -45,10 +45,12 @@ export const ProdutoScan = () => {
         const response = await axios.put('http://192.168.102.14:8080/api/v1/auditoria/edit', {
             id: id,
             qtdAuditada: qtdAudit + qtdAuditAnt,
-            eanProduto: codBarraIu
+            eanProduto: codBarraIu,
+            userLog: user.username
         });
-
+        
         console.log(response.data);
+        setManualProduto("")
         Toast.show({
           type: 'success',
           text1: 'Produto auditado com sucesso',
@@ -85,9 +87,22 @@ export const ProdutoScan = () => {
         }
     }
 
+    // rota para adicionar a quantidade tentativa
+    const verifyQtd = async () => {
+        try {
+            const response = await axios.put(`http://192.168.102.14:8080/api/v1/auditoria/verify?romaneio=${romaneio}`);
+            if(response.status == 200) {
+                console.log(response.data)
+            }
+        } catch (error) {
+            console.error('Erro ao fazer a requisição:', error.message);
+        }
+    }
+
     const finalizarAuditoria = async () => {
         const res = await getDataAuditoriaItem();
         const erros: string[] = [];
+        
         res.forEach((item) => {
             if (item.qtdItens !== item.qtdAuditada) {
                 erros.push(item.descricao);
@@ -96,11 +111,19 @@ export const ProdutoScan = () => {
 
         if (erros.length === 0) {
             console.log("Sucesso", "Todos os itens foram auditados!");
-            //await updateAuditado();
+            await updateAuditado();
         } else {
+            // Chamada da funcao para adicionar a quantidade de tentativas
+            await verifyQtd()
+
             setCameraStats(false)
             setLoadingFlatlist(true);
             setModalConfirmacao(true);
+            Toast.show({
+                type: 'error',
+                text1: 'Erro ao finalizar auditoria',
+                visibilityTime: 5000
+              });
             console.log("Erro", `Os seguintes itens não foram auditados corretamente: ${erros.join(", ")}`);
         }
     };
@@ -166,13 +189,14 @@ export const ProdutoScan = () => {
             <TouchableWithoutFeedback onPress={dismissKeyboard}>
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
-                        <Text>{productName}</Text>
-                        <Text>{codProduto}</Text>
+                        <Text style={{ textAlign: 'center', fontWeight: '500'}}>{productName}</Text>
+                        <Text style={{ textAlign: 'center'}}>Cod:{codProduto}</Text>
                         <Input
                             icon="search"
                             onChangeText={(text) => setManualProduto(text)}
                             value={manualProduto}
                             placeholder="Quantidade do produto"
+                            keyboardType="number-pad"
                         />
                         <View style={{ flexDirection: "row", marginTop: -50}}>
                             <View style={{ width: "50%" }}>
@@ -252,7 +276,7 @@ export const ProdutoScan = () => {
             {!loading && (
                 <View style={styles.barcodeDataContainer}>
                     <View style={styles.buttonContainer}>
-                        <View style={{ width: "100%", marginLeft: 15 }}>
+                        <View style={{ width: "100%", marginLeft: 15, marginTop:-50}}>
                             <Button
                                 title="Finalizar"
                                 onPress={finalizarAuditoria}

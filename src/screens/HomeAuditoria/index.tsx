@@ -104,13 +104,7 @@ export const HomeAuditoria = () => {
             {
                 loading == false ? <View style={styles.barcodeDataContainer}>
                     <View style={styles.buttonContainer}>
-                        <View style={{ width: "60%", marginLeft: 15 }}>
-                            <Button
-                                title="Scanear Novamente"
-                                onPress={() => setCameraStats(true)}
-                            />
-                        </View>
-                        <View style={{ width: "50%", marginRight: 5, marginLeft: -10 }}>
+                        <View style={{ width: "100%", marginRight: 5, marginLeft: -10, marginTop:-50 }}>
                             <Button
                                 title="Digitar Romaneio"
                                 onPress={() => {
@@ -138,6 +132,7 @@ export const HomeAuditoria = () => {
                 onChangeText={(text) => setManualEntryValue(text)}
                 value={manualEntryValue}
                 placeholder="Preencha com o Romaneio"
+                keyboardType="numeric"
               />
               <View style={{ flexDirection: "row" }}>
                 <View style={{ width: "50%" }}>

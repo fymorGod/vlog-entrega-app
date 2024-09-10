@@ -34,6 +34,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "versionCode": 2,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
@@ -45,7 +46,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "8d65edf2-5ef3-4053-bcb2-75c4388abb8d"
+        "projectId": "a153fcb1-2cf7-4d14-aa4c-8576d00fe4a1"
       }
     }
   }

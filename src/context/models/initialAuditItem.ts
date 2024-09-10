@@ -10,6 +10,8 @@ export const initialAuditItem: Audititem = {
     eanProduto: '',
     qtdItens: null,
     qtdConferida: null,
+    qtdTentativa: 0,
+    useLog: '',
     conferida: '',
     qtdAuditada: null,
     auditado: '',

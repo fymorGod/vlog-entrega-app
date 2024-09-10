@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { 
   ActivityIndicator, 
+  Alert, 
   FlatList, 
   Image, 
   StyleSheet, 
@@ -36,12 +37,14 @@ export function Dash() {
 
   const [awsImage, setAwsImage] = useState<string>("");
   const [customerId, setCustomerId] = useState<number>(0);
+  const [count, setCount] = useState(0);
 
   const [loading, setLoading] = useState<boolean>(false);
   
-  const { current } = useRef(awsImage)
+  const awsImageRef = useRef(awsImage);
 
   const navigation = useNavigation();
+
 
   const openCamera = async () => {
     setLoading(true);
@@ -75,12 +78,13 @@ export function Dash() {
   };
 
   useEffect(() => {
-    if ( current !== awsImage ) {
-      console.log("Chamando relacionamento")
-      createImageCustomer()
+    setCount(count + 1)
+    if (awsImageRef.current !== awsImage) {
+      console.log("Chamando relacionamento");
+      createImageCustomer();
+      awsImageRef.current = awsImage;  // Atualiza a referência com o novo valor
     }
-
-  }, [awsImage])
+  }, [awsImage]);
 
   // Send images to AWS
   const handleImageSubmit = async () => {
@@ -96,6 +100,8 @@ export function Dash() {
       // send image file to function for sending to aws bucket
       sendToAwsImages(imageFile)
     });
+    
+    //navigation.navigate('ScannerNFe')
     
    } catch (error) {
     console.log(error)
@@ -173,18 +179,25 @@ export function Dash() {
   // Send to DB Images Relations with Customer
   const createImageCustomer = async () => {
     try {
+
       const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/customer-image', {
         url: awsImage,
         customerPickupId:customerId 
       })
       if (response.status == 200) {
+
         setLoading(false);
         Toast.show({
           type: 'success',
           text1: 'Processo concluído com sucesso',
           visibilityTime: 5000
         });
-        navigation.navigate('ScannerNFe')
+        console.log(count)
+        
+        if(count == imageUris.length) {
+          Alert.alert('Processo', 'Finalizado')
+          navigation.navigate('ScannerNFe')
+        }
       }
       
     } catch (error) {
@@ -204,7 +217,6 @@ export function Dash() {
     await handleImageSubmit()
     
   }
-
   return (
     <Container>
       {loading && (

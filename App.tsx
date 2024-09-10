@@ -4,7 +4,7 @@ import { AuthContext, AuthProvider } from "./src/context/AuthContext";
 import { Home } from "./src/screens/Home";
 import { Login } from "./src/screens/Login";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Button, StyleSheet, View } from "react-native";
+import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Dash } from "./src/screens/Dash";
 import { InitScanner } from "./src/screens/InitScanner";
 import Toast from 'react-native-toast-message';
@@ -37,7 +37,9 @@ export const Layout = () => {
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={logout} title="Sair" color="#170E49" />
+                     <TouchableOpacity onPress={logout} style={{backgroundColor: '#170E49', borderRadius: 20, padding: 2.5}}>
+                      <Text style={{fontSize: 20, color: '#fff', width: 50, textAlign: 'center'}}>Sair</Text>
+                    </TouchableOpacity>
                   </View>
                 )
               }}
@@ -48,7 +50,9 @@ export const Layout = () => {
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={logout} title="Sair" color="#170E49" />
+                    <TouchableOpacity onPress={logout} style={{backgroundColor: '#170E49', borderRadius: 20, padding: 2.5}}>
+                      <Text style={{fontSize: 20, color: '#fff', width: 50, textAlign: 'center'}}>Sair</Text>
+                    </TouchableOpacity>
                   </View>
                 )
               }}
@@ -59,7 +63,9 @@ export const Layout = () => {
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={logout} title="Sair" color="#170E49" />
+                     <TouchableOpacity onPress={logout} style={{backgroundColor: '#170E49', borderRadius: 20, padding: 2.5}}>
+                      <Text style={{fontSize: 20, color: '#fff', width: 50, textAlign: 'center'}}>Sair</Text>
+                    </TouchableOpacity>
                   </View>
                 ),
               }}
@@ -70,7 +76,9 @@ export const Layout = () => {
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={logout} title="Sair" color="#170E49" />
+                    <TouchableOpacity onPress={logout} style={{backgroundColor: '#170E49', borderRadius: 20, padding: 2.5}}>
+                      <Text style={{fontSize: 20, color: '#fff', width: 50, textAlign: 'center'}}>Sair</Text>
+                    </TouchableOpacity>
                   </View>
                 ),
               }}
@@ -81,7 +89,9 @@ export const Layout = () => {
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={logout} title="Sair" color="#170E49" />
+                     <TouchableOpacity onPress={logout} style={{backgroundColor: '#170E49', borderRadius: 20, padding: 2.5}}>
+                      <Text style={{fontSize: 20, color: '#fff', width: 50, textAlign: 'center'}}>Sair</Text>
+                    </TouchableOpacity>
                   </View>
                 ),
               }}
@@ -105,7 +115,9 @@ export const Layout = () => {
                 headerTintColor: "#f/4511e",
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
-                    <Button onPress={logout} title="Sair" color="#170E49" />
+                     <TouchableOpacity onPress={logout} style={{backgroundColor: '#170E49', borderRadius: 20, padding: 2.5}}>
+                      <Text style={{fontSize: 20, color: '#fff', width: 50, textAlign: 'center'}}>Sair</Text>
+                    </TouchableOpacity>
                   </View>
                 ),
               }}

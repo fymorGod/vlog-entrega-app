@@ -71,6 +71,7 @@ export function Home() {
   const sendNfe = async (scannerNotaFiscal: string) => {
     try {
       const status = await validateStatus(scannerNotaFiscal)
+      console.log(status)
       if(status.length == 0) {
         const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
         if (res.status == 200 && res.data.length > 0) {
