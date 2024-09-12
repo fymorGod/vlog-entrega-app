@@ -64,7 +64,7 @@ export const HomeAuditoria = () => {
             setLoading(true);
             setCameraStats(false)
             if (data) setLoading(false);
-            navigation.navigate("ProdutoScan")
+            navigation.navigate("ProdutoAuditoria")
         } else {
             setLoading(false)
             Toast.show({
@@ -73,6 +73,14 @@ export const HomeAuditoria = () => {
                 visibilityTime: 5000
               });
         }
+    }
+
+    async function sendRomaneioScanManual() {
+        getDataAuditoriaItem(manualEntryValue)
+        setLoading(true);
+        setCameraStats(false)
+        navigation.navigate("ProdutoScan")
+        setLoading(false);   
     }
 
     return (
@@ -93,8 +101,14 @@ export const HomeAuditoria = () => {
                     <Text style={{
                         backgroundColor: 'transparent', 
                         textAlign: 'center', 
-                        fontSize: 20,
-                        color: '#ffffff6c'
+                        fontSize: 24,
+                        position: 'absolute',
+                        top: 40,
+                        borderWidth: 2,
+                        padding: 10,
+                        borderColor: '#fff',
+                        fontWeight: '600',
+                        color: '#ffffff'
                         }}>
                         Scanear o Romaneio
                     </Text>
@@ -116,7 +130,6 @@ export const HomeAuditoria = () => {
                 </View>
                     : null
             }
-
         <Modal
         animationType="slide"
         transparent={true}
@@ -136,7 +149,7 @@ export const HomeAuditoria = () => {
               />
               <View style={{ flexDirection: "row" }}>
                 <View style={{ width: "50%" }}>
-                  <Button title="Enviar" onPress={() => {}} />
+                  <Button title="Enviar" onPress={sendRomaneioScanManual} />
                 </View>
                 <View style={{ width: "50%" }}>
                   <Button

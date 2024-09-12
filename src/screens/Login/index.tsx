@@ -2,12 +2,13 @@ import React, { useContext, useEffect } from "react";
 import { Container, ContainerForm, Text, ContainerLogo, TextSpan, ContainerVersion, TextSpanVersion } from "./styles";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
-import { Image, Keyboard, ScrollView, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { Image, Keyboard, ScrollView, StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import { AuthContext } from "../../context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { useForm, Controller } from 'react-hook-form';
+import Toast from "react-native-toast-message";
 
 type FormData = {
     username: string;
@@ -15,39 +16,36 @@ type FormData = {
 }
 
 export function Login() {
-    const mode = 'login'
-
+    const mode = 'login';
     const { setToken, setUser, setAuthenticated } = useContext(AuthContext);
-    const navigation = useNavigation()
+    const navigation = useNavigation();
 
-    const { handleSubmit, control, formState: { errors } } = useForm<FormData>()
-
-    useEffect(() => console.log('Username errors: ', errors?.username), [errors?.username]);
-    useEffect(() => console.log('Password errors: ', errors?.password), [errors?.password]);
+    const { handleSubmit, control, formState: { errors } } = useForm<FormData>();
 
     const login = async (data: FormData) => {
-        try {
             const res = await axios.post("https://api.apotiguar.com.br:64462", {
                 mode: mode,
                 username: data.username,
                 password: data.password
-            })
-            if (res.status == 200 ) {
-                setAuthenticated("authenticate")
-                setToken(res.data.data.token)
+            });
+            if (res.data.flag) {
+                setAuthenticated("authenticate");
+                setToken(res.data.data.token);
                 setUser({
                     lojaInfo: res.data.data.store_name,
                     storeCode: res.data.data.store_code,
                     username: res.data.data.username,
                     permission: res.data.data.permissions
-                })
-                navigation.navigate("Menu")
+                });
+                navigation.navigate("Menu");
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Usuário ou senha incorretos',
+                    visibilityTime: 5000
+                });
             }
-        } catch (error) {
-            console.log(error)
-            throw error;
         }
-    }
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
@@ -65,38 +63,49 @@ export function Login() {
                         </ContainerLogo>
                         <ContainerForm>
                             <Text>Vlog</Text>
-                            <TextSpan>Bem vindo ao sistema</TextSpan>
+                            <TextSpan>Bem-vindo ao sistema</TextSpan>
+                            
                             <Controller
                                 control={control}
                                 name="username"
-                                rules={{
-                                    required: "Username obrigatório"
-                                }}
+                                rules={{ required: "Username obrigatório" }}
                                 render={({ field: { value, onChange } }) => (
-                                    <Input
-                                        icon="mail"
-                                        placeholder="Username"
-                                        autoCapitalize='none'
-                                        onChangeText={onChange}
-                                        value={value}
-                                    />
+                                    <View style={styles.inputContainer}>
+                                        {errors.username && (
+                                            <Text style={styles.errorText}>{errors.username.message}</Text>
+                                        )}
+                                        <Input
+                                            icon="mail"
+                                            placeholder="Username"
+                                            autoCapitalize='none'
+                                            onChangeText={onChange}
+                                            value={value}
+                                        />
+                                    </View>
                                 )}
                             />
+
                             <Controller
                                 control={control}
                                 name="password"
                                 rules={{
                                     required: "Senha obrigatória",
-                                    minLength: 6
+                                    minLength: { value: 6, message: "Senha deve ter pelo menos 6 caracteres" }
                                 }}
                                 render={({ field: { value, onChange } }) => (
-                                    <Input
-                                        icon="lock"
-                                        placeholder="Senha"
-                                        secureTextEntry
-                                        onChangeText={onChange}
-                                        value={value}
-                                    />
+                                    <View style={styles.inputContainer}>
+                                        {errors.password && (
+                                            <Text style={styles.errorText}>{errors.password.message}</Text>
+                                        )}
+                                        <Input
+                                            icon="lock"
+                                            placeholder="Senha"
+                                            secureTextEntry
+                                            onChangeText={onChange}
+                                            value={value}
+                                        />
+                                        
+                                    </View>
                                 )}
                             />
 
@@ -112,7 +121,7 @@ export function Login() {
                 </LinearGradient>
             </TouchableWithoutFeedback>
         </ScrollView>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -122,5 +131,15 @@ const styles = StyleSheet.create({
     scrollViewContent: {
         flexGrow: 1,
         justifyContent: 'center',
+    },
+    inputContainer: {
+        marginTop: 20,
+        marginBottom: -20,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: -10,
+        marginBottom: 5
     },
 });

@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient"
 import { useContext } from "react"
 import { AuthContext } from "../../context/AuthContext"
 
-export const MenuApp = () => {
+export const Menu = () => {
     const navigation = useNavigation()
     const { user } = useContext(AuthContext);
 

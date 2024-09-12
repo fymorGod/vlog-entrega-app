@@ -9,6 +9,7 @@ export declare global {
             HomeAuditoria: undefined;
             ProdutoScan: undefined;
             Menu: undefined;
+            ProdutoAuditoria: undefined;
         }
     }
 }
