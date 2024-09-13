@@ -115,7 +115,7 @@ export function Login() {
                             />
                         </ContainerForm>
                         <ContainerVersion>
-                            <TextSpanVersion>v.2.2.0</TextSpanVersion>
+                            <TextSpanVersion>v.2.3.1</TextSpanVersion>
                         </ContainerVersion>
                     </Container>
                 </LinearGradient>

@@ -1,3 +1,9 @@
+## How to build the project
+
+```bash
+  eas build -p android --profile preview
+```
+ 
  const openGallery = async () => {
     let formData = new FormData();
     try {
