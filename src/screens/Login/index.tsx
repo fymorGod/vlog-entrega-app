@@ -9,6 +9,7 @@ import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { useForm, Controller } from 'react-hook-form';
 import Toast from "react-native-toast-message";
+import * as Application from 'expo-application';
 
 type FormData = {
     username: string;
@@ -21,6 +22,8 @@ export function Login() {
     const navigation = useNavigation();
 
     const { handleSubmit, control, formState: { errors } } = useForm<FormData>();
+
+    const appVersion = Application.nativeApplicationVersion || '1.0';
 
     const login = async (data: FormData) => {
             const res = await axios.post("https://api.apotiguar.com.br:64462", {
@@ -84,7 +87,6 @@ export function Login() {
                                     </View>
                                 )}
                             />
-
                             <Controller
                                 control={control}
                                 name="password"
@@ -115,7 +117,7 @@ export function Login() {
                             />
                         </ContainerForm>
                         <ContainerVersion>
-                            <TextSpanVersion>v.2.3.1</TextSpanVersion>
+                            <TextSpanVersion>v{appVersion}</TextSpanVersion>
                         </ContainerVersion>
                     </Container>
                 </LinearGradient>

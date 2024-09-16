@@ -1,10 +1,4 @@
-
-
 import styled from "styled-components/native";
-
-interface Props {
-    isFocused: boolean;
-  }
 
 export const Container = styled.View`
     flex: 1;
@@ -49,13 +43,12 @@ export const Text = styled.Text`
 export const ContainerVersion = styled.View`
     height: 60px;
     width: 100%;
+    position: absolute;
+    bottom: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    position: absolute;
-    bottom: 0;
     margin: 0 auto;
-   
 `
 
 export const TextSpanVersion = styled.Text`
