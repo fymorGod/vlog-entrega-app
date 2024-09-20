@@ -59,17 +59,24 @@ export const HomeAuditoria = () => {
     };
 
     const getDataAuditoriaItem = async (romaneio: string) => {
-        const response = await axios.get<Audititem[]>(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/details?romaneio=${romaneio}`);
-        
-        if (response.data && response.data.length > 0) {
-            setRomaneio(response.data[0].romaneio)
-            setAuditItem(response.data);
-            setLoading(false);
-            navigation.navigate("ProdutoAuditoria")
+        try {
+            const response = await axios.get<Audititem[]>(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/details?romaneio=${romaneio}`);
+            console.log(response.data)
+            if(response.status == 200) {
+            if (response.data.length > 0) {
+                setRomaneio(response.data[0].romaneio)
+                setAuditItem(response.data);
+                setLoading(false);
+                navigation.navigate("ProdutoAuditoria")
+            } 
         } else {
             setLoading(false);
            Alert.alert("Error", "Error: Romaneio não cadastrado")
+        } 
+     } catch (err) {
+            Alert.alert("Error", "Romaneio fora do sistema")
         }
+       
     };
 
     async function handleScan({ data }: BarCodeScannerResult) {
