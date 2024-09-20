@@ -1,4 +1,4 @@
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView } from "expo-camera";
 import {
     ActivityIndicator,
     Alert,
@@ -13,18 +13,17 @@ import {
     View
 } from "react-native";
 import { Button } from "../../components/Button";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Audititem } from "../../interfaces/AuditoriaItem";
 import { AuthContext } from "../../context/AuthContext";
 import Toast from "react-native-toast-message";
 import Divider from "../../components/Divider";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export const ProdutoScan = () => {
-    const [permission, requestPermission] = useCameraPermissions();
     const [loading, setLoading] = useState<boolean>(false);
     const [loadingFlatlist, setLoadingFlatlist] = useState<boolean>(false);
     const [cameraStats, setCameraStats] = useState<boolean>(true);
@@ -34,13 +33,24 @@ export const ProdutoScan = () => {
     const [codBarr, setCodBarr] = useState<Audititem>();
     const [dadosFiltrados, setDadosFiltrados] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
+    const [selectedItem, setSelectedItem] = useState<Audititem>(null);
     const [modalVisibleManual, setModalVisibleManual] = useState<boolean>(false);
+    
     const handlePress = (item: Audititem) => {
         setSelectedItem(item);
         setModalVisible(true);
     };
 
+    useFocusEffect(
+        useCallback(() => {
+            setCameraStats(true);
+
+            return () => {
+                setCameraStats(false);
+            };
+        }, [])
+    );
+    
     const navigation = useNavigation();
 
     const { auditItem, romaneio, user } = useContext(AuthContext);
@@ -57,7 +67,7 @@ export const ProdutoScan = () => {
         codBarraIu: string,
         qtdAuditAnt: number) => {
         setCameraStats(false);
-        await axios.put('http://192.168.102.14:8080/api/v1/auditoria/edit',
+        await axios.put('https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/edit/scan',
             {
                 id: id,
                 qtdAuditada: qtdAudit + qtdAuditAnt,
@@ -76,7 +86,7 @@ export const ProdutoScan = () => {
 
     const updateReconferir = async (id: number, qtdAudit: number, codBarraIu: string) => {
         setCameraStats(false);
-        await axios.put('http://192.168.102.14:8080/api/v1/auditoria/edit',
+        await axios.put('https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/edit',
             {
                 id: id,
                 qtdAuditada: qtdAudit,
@@ -97,7 +107,7 @@ export const ProdutoScan = () => {
 
     const getDataAuditoriaItem = async () => {
         try {
-            const response = await axios.get(`http://192.168.102.14:8080/api/v1/auditoria/romaneio?romaneio=${romaneio}`);
+            const response = await axios.get(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/romaneio?romaneio=${romaneio}`);
             return filterItems(response.data);
         } catch (error) {
             console.error('Erro ao fazer a requisição:', error.message);
@@ -106,7 +116,7 @@ export const ProdutoScan = () => {
 
     const updateAuditado = async () => {
         try {
-            const response = await axios.put(`http://192.168.102.14:8080/api/v1/auditoria/audited?romaneio=${romaneio}`);
+            const response = await axios.put(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/audited?romaneio=${romaneio}`);
             if (response.status == 200) {
                 Toast.show({
                     type: 'success',
@@ -123,9 +133,9 @@ export const ProdutoScan = () => {
     // rota para adicionar a quantidade tentativa
     const verifyQtd = async () => {
         try {
-            const response = await axios.put(`http://192.168.102.14:8080/api/v1/auditoria/verify?romaneio=${romaneio}`);
+            const response = await axios.put(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/verify?romaneio=${romaneio}`);
             if (response.status == 200) {
-                console.log(response.data)
+               return response.data
             }
         } catch (error) {
             console.error('Erro ao fazer a requisição:', error.message);
@@ -146,20 +156,22 @@ export const ProdutoScan = () => {
             await updateAuditado();
         } else {
             // Chamada da funcao para adicionar a quantidade de tentativas
-            await verifyQtd()
-
-            setCameraStats(false)
-            setLoadingFlatlist(true);
-            setModalConfirmacao(true);
+            setLoading(true)
+            const res = await verifyQtd()
+            if (res) {
+                setCameraStats(false)
+                setLoadingFlatlist(true);
+                setModalConfirmacao(true);
+            }
+    
             Toast.show({
                 type: 'error',
                 text1: 'Erro ao finalizar auditoria',
                 visibilityTime: 5000
             });
-            // console.log("Erro", `Os seguintes itens não foram auditados corretamente: ${erros.join(", ")}`);
         }
     };
-
+    // Itens do Flatlist
     const renderItem = ({ item }: { item: Audititem }) => (
         <TouchableOpacity style={styles.itemContainer} onPress={() => handlePress(item)}>
             <Text style={styles.itemText}>Romaneio: {item.romaneio}</Text>
@@ -173,7 +185,7 @@ export const ProdutoScan = () => {
     const dismissKeyboard = () => {
         Keyboard.dismiss();
     };
-
+    // Modal dentro do Flatlist
     const renderModalConfirmacao = () => (
         <Modal
             animationType="slide"
@@ -208,39 +220,69 @@ export const ProdutoScan = () => {
                                     <Text style={{
                                         textAlign: 'center',
                                         fontSize: 16,
+                                        marginBottom: 10,
+                                        padding:10,
+                                        backgroundColor: '#222',
+                                        borderRadius: 10,
+                                        color: '#fff'
+                                    }}>
+                                        Quantidade de tentativas: {selectedItem.qtdTentativa}
+                                    </Text> 
+                                    <Text style={{
+                                        textAlign: 'center',
+                                        fontSize: 16,
+                                        marginTop:5,
                                         marginBottom: 10
                                     }}>
                                         Código do produto: {selectedItem.codProduto}
                                     </Text>
-                                    <Text style={{ textAlign: 'center', fontSize: 16 }}>Item: {selectedItem.descricao}</Text>
+                                    <Divider />
+                                    <Text style={{ textAlign: 'center', fontSize: 16, marginBottom: 10, marginTop: 10 }}>Item: {selectedItem.descricao}</Text>
                                     <TextInput
                                         style={{
                                             padding: 20,
-                                            borderBlockColor: '#222',
+                                            borderColor: '#000',
                                             borderWidth: 1,
                                             borderRadius: 10,
                                             marginTop: 10,
-                                            marginBottom: -25
+                                            marginBottom: -25,
                                         }}
                                         onChangeText={(text) => setManualProduto(text)}
                                         value={manualProduto}
                                         placeholder="Quantidade do produto"
                                         keyboardType="number-pad"
+                                        placeholderTextColor={'#333'}
                                     />
-                                    <Button
-                                        title="Enviar"
-                                        onPress={() =>
-                                            selectedItem.qtdTentativa < 3 ? updateReconferir(selectedItem.id, parseInt(manualProduto), selectedItem.codBarrasIu)
+                                   <View style={{alignItems: 'center',flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 10, marginTop: 50}}>
+                                    <TouchableOpacity
+                                         onPress={() =>
+                                            selectedItem.qtdTentativa < 4 ? updateReconferir(selectedItem.id, parseInt(manualProduto), selectedItem.codBarrasIu)
                                                 : Alert.alert("Error", "Quantidade Excedida")
-                                        } />
+                                        }
+                                        style={{
+                                            backgroundColor: '#D7DF23',
+                                            padding: 20,
+                                            alignSelf: 'center',
+                                            borderRadius: 4,
+                                            width: '45%'
+                                        }}>
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 14,
+                                                color: '#202020'
+                                            }}>
+                                            Enviar
+                                        </Text>
+                                    </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => setModalVisible(false)}
                                         style={{
-                                            width: '80%',
                                             backgroundColor: '#cd0914',
                                             padding: 20,
                                             alignSelf: 'center',
-                                            borderRadius: 4
+                                            borderRadius: 4,
+                                            width: '45%'
                                         }}>
                                         <Text
                                             style={{
@@ -251,6 +293,7 @@ export const ProdutoScan = () => {
                                             Fechar
                                         </Text>
                                     </TouchableOpacity>
+                                   </View>
                                 </View>
                             </View>
                         </Modal>
@@ -272,18 +315,26 @@ export const ProdutoScan = () => {
                     <Divider />
                     {!loadingFlatlist ? (
                         <ActivityIndicator size="large" color="#2294ff" />
-                    ) : (
-                        <FlatList
-                            data={dadosFiltrados}
-                            renderItem={renderItem}
-                            keyExtractor={(item) => item.id.toString()}
-                        />
-                    )}
+                    ) : renderList()}
                     
                 </View>
             </View>
         </Modal>
     );
+
+    const renderList = () => {
+        if(dadosFiltrados.length > 0) {
+            return (<FlatList
+                data={dadosFiltrados}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id.toString()}
+            />)
+        } else {
+            Alert.alert("Processe", "Auditoria finalizada")
+            setModalConfirmacao(false)
+            navigation.navigate('HomeAuditoria')
+        }
+    }
 
     const renderModalQTDProduto = (
         item: number,
@@ -306,7 +357,7 @@ export const ProdutoScan = () => {
                         <TextInput
                             style={{
                                 padding: 20,
-                                borderBlockColor: '#222',
+                                borderColor: '#222',
                                 borderWidth: 1,
                                 borderRadius: 10,
                                 marginTop: 10,
@@ -359,12 +410,14 @@ export const ProdutoScan = () => {
 
     async function sendProdutoScanManual() {
         setCameraStats(false)
-        const foundItem = auditItem.find(item => item.codBarrasIu === manualProduto);
-        if (foundItem.qtdTentativa < 3) {
+        const foundItem = auditItem.find(item => item.codBarrasIu === manualProduto || item.codProduto === manualProduto);
+        
+        if (foundItem && foundItem.qtdTentativa < 4) {
             setManualProduto("")
-            setModalVisibleManual(false)
             setCodBarr(foundItem);
+
             // variáveis de controle de fluxo
+            setModalVisibleManual(false)
             setLoading(true);
             setModalInfo(true);
             setLoading(false);
@@ -377,7 +430,7 @@ export const ProdutoScan = () => {
     async function handleScan({ data }: BarCodeScannerResult) {
         if (data) {
             const foundItem = auditItem.find(item => item.codBarrasIu === data);
-            if (foundItem.qtdTentativa < 3) {
+            if (foundItem.qtdTentativa < 4) {
                 setCodBarr(foundItem);
                 // variáveis de controle de fluxo
                 setLoading(true);
@@ -392,21 +445,6 @@ export const ProdutoScan = () => {
             setLoading(false);
             console.error("O código de barras escaneado é vazio ou indefinido.");
         }
-    }
-
-    if (!permission) {
-        return <View />;
-    }
-
-    if (!permission.granted) {
-        return (
-            <View style={styles.container}>
-                <Text style={{ textAlign: "center" }}>
-                    É necessário sua permissão para acessar o scanner
-                </Text>
-                <Button onPress={requestPermission} title="Permitir de acesso a câmera." />
-            </View>
-        );
     }
 
     return (
@@ -453,12 +491,14 @@ export const ProdutoScan = () => {
                             <TextInput
                                 style={{
                                     padding: 20,
-                                    borderBlockColor: '#222',
+                                    borderColor: '#222',
                                     borderWidth: 1,
                                     borderRadius: 10,
                                     marginTop: 10,
                                     marginBottom: -25
                                 }}
+                                placeholderTextColor={'#333'}
+
                                 onChangeText={(text) => setManualProduto(text)}
                                 value={manualProduto}
                                 placeholder="Digite o código do Produto"

@@ -2,7 +2,7 @@
   "expo": {
     "name": "vlog-v2-app",
     "slug": "vlog-v2-app",
-    "version": "v2.3.2",
+    "version": "2.4.13",
     "platforms": [
       "ios",
       "android",
@@ -46,7 +46,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "a153fcb1-2cf7-4d14-aa4c-8576d00fe4a1"
+        "projectId": "f0e97b55-11bf-41fa-9724-8e31eb5edd78"
       }
     }
   }

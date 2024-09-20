@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -12,7 +12,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import Toast from "react-native-toast-message";
@@ -25,13 +25,25 @@ export function Home() {
   const [manualEntryValue, setManualEntryValue] = useState("");
 
   const { setNfe, user: { storeCode } } = useContext(AuthContext);
-  
+
   const navigation = useNavigation();
-  
+
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   const [cameraStats, setCameraStats] = useState(true);
-  
+
+  useFocusEffect(
+    useCallback(() => {
+      // Reativando a câmera ao retornar para a tela
+      setCameraStats(true);
+
+      return () => {
+        // Opcional: desativando a câmera quando a tela perde o foco
+        setCameraStats(false);
+      };
+    }, [])
+  );
+
   if (!permission) {
     return <View />;
   }
@@ -46,22 +58,22 @@ export function Home() {
       </View>
     );
   }
-  
+
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
 
   const validateStatus = async (barCode: string) => {
-    
+
     const response = await fetch(`https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/find-customer-by-key?keyNf=${barCode}`, {
-      method: 'GET', 
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json', 
+        'Content-Type': 'application/json',
       },
     });
-    
+
     if (response.ok) {
-      const data = await response.json(); 
+      const data = await response.json();
       return data
     } else {
       console.error('Erro ao buscar cliente por chave:', response.statusText)
@@ -72,7 +84,7 @@ export function Home() {
     try {
       const status = await validateStatus(scannerNotaFiscal)
       console.log(status)
-      if(status.length == 0) {
+      if (status.length == 0) {
         const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
         if (res.status == 200 && res.data.length > 0) {
           setNfe(res.data[0]);
@@ -107,7 +119,7 @@ export function Home() {
 
         navigation.navigate("ScannerNFe")
       }
-      
+
     } catch (error) {
       console.log(error)
     }
@@ -151,7 +163,7 @@ export function Home() {
             onBarcodeScanned={handleScan}
             style={styles.camera}
             pictureSize={"1920x1080"}
-    
+
           />
           : null
       }
@@ -174,7 +186,7 @@ export function Home() {
             </View>
           </View>
         </View>
-        : null
+          : null
       }
 
       <Modal
