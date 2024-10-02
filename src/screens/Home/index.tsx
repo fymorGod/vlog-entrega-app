@@ -17,7 +17,7 @@ import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import Toast from "react-native-toast-message";
 
-export const URL_VALIDATE_DATA_SCANNER = "https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?";
+export const URL_VALIDATE_DATA_SCANNER = "https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?";
 
 export function Home() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -65,7 +65,7 @@ export function Home() {
 
   const validateStatus = async (barCode: string) => {
 
-    const response = await fetch(`https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/find-customer-by-key?keyNf=${barCode}`, {
+    const response = await fetch(`https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/find-customer-by-key?keyNf=${barCode}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

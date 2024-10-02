@@ -10,6 +10,7 @@ export declare global {
             ProdutoScan: undefined;
             Menu: undefined;
             ProdutoAuditoria: undefined;
+            Auditados: undefined;
         }
     }
 }

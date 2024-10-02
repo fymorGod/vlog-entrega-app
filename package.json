@@ -15,9 +15,9 @@
     "@react-native-community/masked-view": "^0.1.11",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
-    "@reduxjs/toolkit": "^2.2.6",
     "axios": "^1.7.2",
     "expo": "~51.0.22",
+    "expo-application": "~5.9.1",
     "expo-barcode-scanner": "~13.0.1",
     "expo-blur": "~13.0.2",
     "expo-camera": "~15.0.14",
@@ -41,7 +41,8 @@
     "react-native-worklets-core": "^1.1.1",
     "styled-components": "^6.1.8",
     "zod": "^3.23.8",
-    "expo-application": "~5.9.1"
+    "zustand": "^5.0.0-rc.2",
+    "expo-image-manipulator": "~12.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

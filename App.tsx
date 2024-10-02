@@ -13,6 +13,7 @@ import { AuditoriaScreen } from "./src/screens/Auditoria";
 import { HomeAuditoria } from "./src/screens/HomeAuditoria";
 import { ProdutoScan } from "./src/screens/ProdutoScan";
 import { ProdutoScreen } from "./src/screens/Produto";
+import { Auditados } from "./src/screens/Auditados";
 
 const Stack = createNativeStackNavigator();
 
@@ -114,6 +115,17 @@ export const Layout = () => {
             <Stack.Screen
               name="ProdutoScan"
               component={ProdutoScan}
+              options={{
+                headerRight: () => (
+                  <View style={styles.buttonContainer}>
+                    <Button onPress={logout} title="Sair" color="#170E49" />
+                  </View>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="Auditados"
+              component={Auditados}
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>

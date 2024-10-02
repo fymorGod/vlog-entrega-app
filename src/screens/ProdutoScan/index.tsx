@@ -22,6 +22,8 @@ import { AuthContext } from "../../context/AuthContext";
 import Toast from "react-native-toast-message";
 import Divider from "../../components/Divider";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { CameraCodProduto } from "../../components/CameraCodProd";
+import { URL_GET_DATA_AUDITORIA, URL_UPDATE_AUDITADO, URL_UPDATE_AUDITORIA, URL_UPDATE_RECONFERIR, URL_VERIFY_QTD_AUDITORIA } from "../../lib/constants";
 
 export const ProdutoScan = () => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -67,7 +69,7 @@ export const ProdutoScan = () => {
         codBarraIu: string,
         qtdAuditAnt: number) => {
         setCameraStats(false);
-        await axios.put('https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/edit/scan',
+        await axios.put(URL_UPDATE_AUDITORIA,
             {
                 id: id,
                 qtdAuditada: qtdAudit + qtdAuditAnt,
@@ -86,7 +88,7 @@ export const ProdutoScan = () => {
 
     const updateReconferir = async (id: number, qtdAudit: number, codBarraIu: string) => {
         setCameraStats(false);
-        await axios.put('https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/edit',
+        await axios.put(URL_UPDATE_RECONFERIR,
             {
                 id: id,
                 qtdAuditada: qtdAudit,
@@ -107,7 +109,7 @@ export const ProdutoScan = () => {
 
     const getDataAuditoriaItem = async () => {
         try {
-            const response = await axios.get(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/romaneio?romaneio=${romaneio}`);
+            const response = await axios.get(URL_GET_DATA_AUDITORIA + romaneio);
             return filterItems(response.data);
         } catch (error) {
             console.error('Erro ao fazer a requisição:', error.message);
@@ -116,7 +118,7 @@ export const ProdutoScan = () => {
 
     const updateAuditado = async () => {
         try {
-            const response = await axios.put(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/audited?romaneio=${romaneio}`);
+            const response = await axios.put(URL_UPDATE_AUDITADO + romaneio);
             if (response.status == 200) {
                 Toast.show({
                     type: 'success',
@@ -133,7 +135,7 @@ export const ProdutoScan = () => {
     // rota para adicionar a quantidade tentativa
     const verifyQtd = async () => {
         try {
-            const response = await axios.put(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/verify?romaneio=${romaneio}`);
+            const response = await axios.put(URL_VERIFY_QTD_AUDITORIA + romaneio);
             if (response.status == 200) {
                return response.data
             }
@@ -456,26 +458,7 @@ export const ProdutoScan = () => {
                 </View>
             )}
             {cameraStats && (
-                <CameraView
-                    onBarcodeScanned={handleScan}
-                    style={styles.camera}
-                    pictureSize={"1920x1080"}
-                >
-                    <Text style={{
-                        backgroundColor: 'transparent',
-                        textAlign: 'center',
-                        fontSize: 24,
-                        position: 'absolute',
-                        top: 40,
-                        borderWidth: 2,
-                        padding: 10,
-                        borderColor: '#fff',
-                        fontWeight: '600',
-                        color: '#ffffff'
-                    }}>
-                        Scanear Código do Produto
-                    </Text>
-                </CameraView>
+               <CameraCodProduto handleScan={handleScan}/>
             )}
             <Modal
                 animationType="slide"
@@ -490,6 +473,7 @@ export const ProdutoScan = () => {
                             <Text style={{fontWeight: '600', fontSize: 18, textAlign: 'center'}}>Informe o Código do Produto</Text>
                             <TextInput
                                 style={{
+                                    width: '70%',
                                     padding: 20,
                                     borderColor: '#222',
                                     borderWidth: 1,
@@ -504,7 +488,7 @@ export const ProdutoScan = () => {
                                 placeholder="Digite o código do Produto"
                                 keyboardType="number-pad"
                             />
-                            <View style={{ flexDirection: "row" }}>
+                            <View style={{ flexDirection: "row", width: '80%'}}>
                             <View style={{ width: "50%" }}>
                                     <Button
                                         title="Enviar"
@@ -562,6 +546,28 @@ export const ProdutoScan = () => {
                                     Digitar Código do Produto
                                 </Text>
                             </TouchableOpacity>
+                            <TouchableOpacity
+                        onPress={() => {
+                            navigation.navigate('Auditados')
+                        }}
+                        style={{
+                            width: '80%',
+                            backgroundColor: '#08e92d',
+                            padding: 20,
+                            alignSelf: 'center',
+                            borderRadius: 4,
+                            marginBottom: -35,
+                            marginTop: 40
+                        }}>
+                        <Text style={{
+                            textAlign: 'center',
+                            fontSize: 14,
+                            color: '#fff',
+                            fontWeight: '600'
+                        }}>
+                            Ver últimos auditados
+                        </Text>
+                    </TouchableOpacity>
                             <Button
                                 title="Finalizar"
                                 onPress={finalizarAuditoria}
@@ -614,7 +620,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         marginTop: 60,
-        backgroundColor: 'black'
+        backgroundColor: 'rgba(0, 0, 0, 0.87)',
     },
     itemText: {
         fontSize: 16,
@@ -655,7 +661,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.87)',
     },
     modalContainer: {
         width: '90%',

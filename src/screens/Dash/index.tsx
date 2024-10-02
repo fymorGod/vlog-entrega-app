@@ -9,15 +9,16 @@ import {
   TextInfoImage,
 } from "./styles";
 import { useState } from "react";
-import { 
-  ActivityIndicator, 
-  Alert, 
-  FlatList, 
-  Image, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import axios from "axios";
 import { ButtonCamera } from "../../components/ButtonCameraNFE";
@@ -27,6 +28,7 @@ import { ButtonFinish } from "../../components/ButtonFinish";
 import { AuthContext } from "../../context/AuthContext";
 
 import Toast from 'react-native-toast-message';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 export function Dash() {
   const { nfe, user } = useContext(AuthContext)
@@ -40,21 +42,18 @@ export function Dash() {
   const [count, setCount] = useState(0);
 
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   const awsImageRef = useRef(awsImage);
 
   const navigation = useNavigation();
-
 
   const openCamera = async () => {
     setLoading(true);
     try {
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        allowsMultipleSelection: true,
         aspect: [4, 3],
-        quality: 1,
+        quality: 0.4,
       });
 
       if (!result.canceled && result.assets[0].uri) {
@@ -82,42 +81,48 @@ export function Dash() {
     if (awsImageRef.current !== awsImage) {
       console.log("Chamando relacionamento");
       createImageCustomer();
-      awsImageRef.current = awsImage;  // Atualiza a referência com o novo valor
+      awsImageRef.current = awsImage;
     }
   }, [awsImage]);
 
   // Send images to AWS
   const handleImageSubmit = async () => {
-   try {
-    const currentDate = new Date();
-    imageUris.forEach((uri, index) => {
-      const imageName = `photo_${currentDate.getTime()}_${index}.png`;
-      const imageFile = {
-        uri: uri,
-        name: imageName,
-        type: 'image/jpeg'
-      };
-      // send image file to function for sending to aws bucket
-      sendToAwsImages(imageFile)
-    });
-    
-    //navigation.navigate('ScannerNFe')
-    
-   } catch (error) {
-    console.log(error)
-    Toast.show({
-      type: 'error',
-      text1: 'Erro ao enviar imagenns para AWS: ' + error,
-      visibilityTime: 5000
-    })
-   }
-  }
+    try {
+      const currentDate = new Date();
+      const promises = imageUris.map(async (uri, index) => {
+        const imageName = `photo_${currentDate.getTime()}_${index}.jpg`;
+        const compressedImage = await manipulateAsync(
+          uri,
+          [{ resize: { width: 800 } }],
+          { compress: 0.7, format: SaveFormat.JPEG }
+        );
 
+        const imageFile = {
+          uri: compressedImage.uri,
+          name: imageName,
+          type: 'image/jpeg'
+        };
+
+        return sendToAwsImages(imageFile);
+      });
+
+      await Promise.all(promises);
+      //navigation.navigate('ScannerNFe');
+
+    } catch (error) {
+      console.error('Erro ao enviar imagens para AWS:', error);
+      Toast.show({
+        type: 'error',
+        text1: `Erro ao enviar imagens para AWS: ${error}`,
+        visibilityTime: 5000
+      });
+    }
+  };
   const sendToAwsImages = async (image: any) => {
     try {
       const formData = new FormData();
       formData.append('file', image);
-      const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/upload', formData, {
+      const response = await axios.post('https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -145,7 +150,7 @@ export function Dash() {
   // Send customer to DB 
   const createCustomer = async () => {
     try {
-      const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', {
+      const response = await axios.post('https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', {
         store: user.storeCode,
         cpf: nfe.clienteE.cpfCliente,
         client: nfe.clienteE.nome,
@@ -160,13 +165,13 @@ export function Dash() {
 
       if (response.status == 201) {
         setCustomerId(response.data.customerId)
-       
+
         Toast.show({
           type: 'success',
           text1: 'Customer criado com sucesso',
           visibilityTime: 5000
         })
-      } 
+      }
     } catch (error) {
       setLoading(false);
       Toast.show({
@@ -180,9 +185,9 @@ export function Dash() {
   const createImageCustomer = async () => {
     try {
 
-      const response = await axios.post('https://staging-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/customer-image', {
+      const response = await axios.post('https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/customer-image', {
         url: awsImage,
-        customerPickupId:customerId 
+        customerPickupId: customerId
       })
       if (response.status == 200) {
 
@@ -193,13 +198,13 @@ export function Dash() {
           visibilityTime: 5000
         });
         console.log(count)
-        
-        if(count == imageUris.length) {
+
+        if (count == imageUris.length) {
           Alert.alert('Processo', 'Finalizado')
           navigation.navigate('ScannerNFe')
         }
       }
-      
+
     } catch (error) {
       console.log(error)
       Toast.show({
@@ -215,7 +220,7 @@ export function Dash() {
 
     await createCustomer()
     await handleImageSubmit()
-    
+
   }
   return (
     <Container>

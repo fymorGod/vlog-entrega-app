@@ -5,6 +5,8 @@ import {
     Modal,
     StyleSheet,
     Text,
+    TextInput,
+    TouchableOpacity,
     TouchableWithoutFeedback,
     View
 } from "react-native";
@@ -61,7 +63,6 @@ export const HomeAuditoria = () => {
     const getDataAuditoriaItem = async (romaneio: string) => {
         try {
             const response = await axios.get<Audititem[]>(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/details?romaneio=${romaneio}`);
-            console.log(response.data)
             if(response.status == 200) {
             if (response.data.length > 0) {
                 setRomaneio(response.data[0].romaneio)
@@ -71,7 +72,7 @@ export const HomeAuditoria = () => {
             } 
         } else {
             setLoading(false);
-           Alert.alert("Error", "Error: Romaneio não cadastrado")
+            Alert.alert("Error", "Error: Romaneio não cadastrado")
         } 
      } catch (err) {
             Alert.alert("Error", "Romaneio fora do sistema")
@@ -157,24 +158,48 @@ export const HomeAuditoria = () => {
                 <TouchableWithoutFeedback onPress={dismissKeyboard}>
                     <View style={styles.centeredView}>
                         <View style={styles.modalView}>
-                            <Input
-                                icon="search"
-                                onChangeText={(text) => setManualEntryValue(text)}
-                                value={manualEntryValue}
-                                placeholder="Preencha com o Romaneio"
-                                keyboardType="numeric"
-                            />
-                            <View style={{ flexDirection: "row" }}>
+                        <Text style={{ fontWeight: '600', fontSize: 18, textAlign: 'center' }}>Informe o Romaneio</Text>
+                        <TextInput
+                            style={{
+                                width: '80%',
+                                padding: 20,
+                                borderColor: '#222',
+                                borderWidth: 1,
+                                borderRadius: 10,
+                                marginTop: 10,
+                                marginBottom: -25
+                            }}
+                            placeholderTextColor={'#333'}
+
+                            onChangeText={(text) => setManualEntryValue(text)}
+                            value={manualEntryValue}
+                            placeholder="Digite o romaneio"
+                            keyboardType="number-pad"
+                        />
+                            <View style={{ flexDirection: "row", paddingHorizontal: 20}}>
                                 <View style={{ width: "50%" }}>
                                     <Button title="Enviar" onPress={sendRomaneioScanManual} />
                                 </View>
                                 <View style={{ width: "50%" }}>
-                                    <Button
-                                        title="Fechar"
-                                        onPress={() => {
-                                            setModalVisible(false);
-                                        }}
-                                    />
+                                <TouchableOpacity
+                                    style={{
+                                        width: '80%',
+                                        backgroundColor: '#cd0914',
+                                        padding: 20,
+                                        alignSelf: 'center',
+                                        borderRadius: 4,
+                                        marginTop: 50
+                                    }}
+                                    onPress={() => setModalVisible(false)}>
+                                    <Text
+                                        style={{
+                                            textAlign: 'center',
+                                            fontSize: 14,
+                                            color: '#fff'
+                                        }}>
+                                        Fechar
+                                    </Text>
+                                   </TouchableOpacity>
                                 </View>
                             </View>
                         </View>
@@ -232,7 +257,7 @@ const styles = StyleSheet.create({
             width: 0,
             height: 2,
         },
-        height: 300,
+        height: 240,
         width: '100%',
         justifyContent: 'center',
         alignContent: 'center',
