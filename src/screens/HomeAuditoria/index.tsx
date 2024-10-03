@@ -13,7 +13,6 @@ import {
 import { Button } from "../../components/Button";
 import { useCallback, useContext, useState } from "react";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
-import { Input } from "../../components/Input";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../context/AuthContext";
 import { Audititem } from "../../interfaces/AuditoriaItem";
@@ -21,6 +20,7 @@ import { Audititem } from "../../interfaces/AuditoriaItem";
 import axios from "axios";
 import Toast from "react-native-toast-message";
 import { Alert } from "react-native";
+import { URL_GET_DATA_BY_ROMANEIO } from "../../lib/constants";
 
 export const HomeAuditoria = () => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -62,22 +62,21 @@ export const HomeAuditoria = () => {
 
     const getDataAuditoriaItem = async (romaneio: string) => {
         try {
-            const response = await axios.get<Audititem[]>(`https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/details?romaneio=${romaneio}`);
-            if(response.status == 200) {
-            if (response.data.length > 0) {
-                setRomaneio(response.data[0].romaneio)
-                setAuditItem(response.data);
+            const response = await axios.get<Audititem[]>(URL_GET_DATA_BY_ROMANEIO + romaneio);
+            if (response.status == 200) {
+                if (response.data.length > 0) {
+                    setRomaneio(response.data[0].romaneio)
+                    setAuditItem(response.data);
+                    setLoading(false);
+                    navigation.navigate("ProdutoAuditoria")
+                }
+            } else {
                 setLoading(false);
-                navigation.navigate("ProdutoAuditoria")
-            } 
-        } else {
-            setLoading(false);
-            Alert.alert("Error", "Error: Romaneio não cadastrado")
-        } 
-     } catch (err) {
+                Alert.alert("Error", "Error: Romaneio não cadastrado")
+            }
+        } catch (err) {
             Alert.alert("Error", "Romaneio fora do sistema")
         }
-       
     };
 
     async function handleScan({ data }: BarCodeScannerResult) {
@@ -158,48 +157,48 @@ export const HomeAuditoria = () => {
                 <TouchableWithoutFeedback onPress={dismissKeyboard}>
                     <View style={styles.centeredView}>
                         <View style={styles.modalView}>
-                        <Text style={{ fontWeight: '600', fontSize: 18, textAlign: 'center' }}>Informe o Romaneio</Text>
-                        <TextInput
-                            style={{
-                                width: '80%',
-                                padding: 20,
-                                borderColor: '#222',
-                                borderWidth: 1,
-                                borderRadius: 10,
-                                marginTop: 10,
-                                marginBottom: -25
-                            }}
-                            placeholderTextColor={'#333'}
+                            <Text style={{ fontWeight: '600', fontSize: 18, textAlign: 'center' }}>Informe o Romaneio</Text>
+                            <TextInput
+                                style={{
+                                    width: '80%',
+                                    padding: 20,
+                                    borderColor: '#222',
+                                    borderWidth: 1,
+                                    borderRadius: 10,
+                                    marginTop: 10,
+                                    marginBottom: -25
+                                }}
+                                placeholderTextColor={'#333'}
 
-                            onChangeText={(text) => setManualEntryValue(text)}
-                            value={manualEntryValue}
-                            placeholder="Digite o romaneio"
-                            keyboardType="number-pad"
-                        />
-                            <View style={{ flexDirection: "row", paddingHorizontal: 20}}>
+                                onChangeText={(text) => setManualEntryValue(text)}
+                                value={manualEntryValue}
+                                placeholder="Digite o romaneio"
+                                keyboardType="number-pad"
+                            />
+                            <View style={{ flexDirection: "row", paddingHorizontal: 20 }}>
                                 <View style={{ width: "50%" }}>
                                     <Button title="Enviar" onPress={sendRomaneioScanManual} />
                                 </View>
                                 <View style={{ width: "50%" }}>
-                                <TouchableOpacity
-                                    style={{
-                                        width: '80%',
-                                        backgroundColor: '#cd0914',
-                                        padding: 20,
-                                        alignSelf: 'center',
-                                        borderRadius: 4,
-                                        marginTop: 50
-                                    }}
-                                    onPress={() => setModalVisible(false)}>
-                                    <Text
+                                    <TouchableOpacity
                                         style={{
-                                            textAlign: 'center',
-                                            fontSize: 14,
-                                            color: '#fff'
-                                        }}>
-                                        Fechar
-                                    </Text>
-                                   </TouchableOpacity>
+                                            width: '80%',
+                                            backgroundColor: '#cd0914',
+                                            padding: 20,
+                                            alignSelf: 'center',
+                                            borderRadius: 4,
+                                            marginTop: 50
+                                        }}
+                                        onPress={() => setModalVisible(false)}>
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 14,
+                                                color: '#fff'
+                                            }}>
+                                            Fechar
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         </View>

@@ -1,4 +1,3 @@
-import { CameraView } from "expo-camera";
 import {
     ActivityIndicator,
     Alert,
@@ -24,6 +23,7 @@ import Divider from "../../components/Divider";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CameraCodProduto } from "../../components/CameraCodProd";
 import { URL_GET_DATA_AUDITORIA, URL_UPDATE_AUDITADO, URL_UPDATE_AUDITORIA, URL_UPDATE_RECONFERIR, URL_VERIFY_QTD_AUDITORIA } from "../../lib/constants";
+import { Loading } from "../../components/Loading";
 
 export const ProdutoScan = () => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -32,12 +32,15 @@ export const ProdutoScan = () => {
     const [modalInfo, setModalInfo] = useState<boolean>(false);
     const [modalConfirmacao, setModalConfirmacao] = useState<boolean>(false);
     const [manualProduto, setManualProduto] = useState<string>("");
+    const [codProdutoManual, setCodProdutoManual] = useState<string>("");
     const [codBarr, setCodBarr] = useState<Audititem>();
     const [dadosFiltrados, setDadosFiltrados] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState<Audititem>(null);
     const [modalVisibleManual, setModalVisibleManual] = useState<boolean>(false);
-    
+
+    const [auditorias, setAuditorias] = useState([]);
+
     const handlePress = (item: Audititem) => {
         setSelectedItem(item);
         setModalVisible(true);
@@ -52,7 +55,7 @@ export const ProdutoScan = () => {
             };
         }, [])
     );
-    
+
     const navigation = useNavigation();
 
     const { auditItem, romaneio, user } = useContext(AuthContext);
@@ -63,28 +66,57 @@ export const ProdutoScan = () => {
         return filtered;
     };
 
-    const updateAuditoria = async (
-        id: number,
-        qtdAudit: number,
-        codBarraIu: string,
-        qtdAuditAnt: number) => {
+    const handleAddOrUpdateAuditoria = (id, qtdAudit, codBarraIu) => {
         setCameraStats(false);
-        await axios.put(URL_UPDATE_AUDITORIA,
-            {
-                id: id,
-                qtdAuditada: qtdAudit + qtdAuditAnt,
-                eanProduto: codBarraIu,
-                userLog: user.username
-            });
+        setModalInfo(false);
+        setCameraStats(true);
         setManualProduto("")
-        Toast.show({
-            type: 'success',
-            text1: 'Produto auditado com sucesso',
-            visibilityTime: 5000
+        setAuditorias(prevAuditorias => {
+            const existingIndex = prevAuditorias.findIndex(aud => aud.id === id);
+
+            if (existingIndex > -1) {
+                const updatedAuditorias = [...prevAuditorias];
+                updatedAuditorias[existingIndex].qtdAudit += qtdAudit;
+                setModalInfo(false);
+                return updatedAuditorias;
+            } else {
+                return [...prevAuditorias, { id, qtdAudit, codBarraIu }];
+            }
         });
+    };
+
+    const updateAuditorias = async () => {
+        setCameraStats(false);
+
+        for (const auditoria of auditorias) {
+            const { id, qtdAudit, codBarraIu } = auditoria;
+            try {
+                await axios.put(URL_UPDATE_AUDITORIA, {
+                    id: id,
+                    qtdAuditada: qtdAudit, 
+                    eanProduto: codBarraIu,
+                    userLog: user.username
+                });
+
+                Toast.show({
+                    type: 'success',
+                    text1: `Produto ${id} auditado com sucesso`,
+                    visibilityTime: 5000
+                });
+            } catch (error) {
+                Toast.show({
+                    type: 'error',
+                    text1: `Erro ao atualizar produto ${id}: ${error.message}`,
+                    visibilityTime: 5000
+                });
+            }
+        }
+
+        setAuditorias([]);
         setCameraStats(true);
         setModalInfo(false);
-    }
+    };
+
 
     const updateReconferir = async (id: number, qtdAudit: number, codBarraIu: string) => {
         setCameraStats(false);
@@ -137,7 +169,7 @@ export const ProdutoScan = () => {
         try {
             const response = await axios.put(URL_VERIFY_QTD_AUDITORIA + romaneio);
             if (response.status == 200) {
-               return response.data
+                return response.data
             }
         } catch (error) {
             console.error('Erro ao fazer a requisição:', error.message);
@@ -145,6 +177,7 @@ export const ProdutoScan = () => {
     }
 
     const finalizarAuditoria = async () => {
+        await updateAuditorias()
         const res = await getDataAuditoriaItem();
         const erros: string[] = [];
 
@@ -165,7 +198,7 @@ export const ProdutoScan = () => {
                 setLoadingFlatlist(true);
                 setModalConfirmacao(true);
             }
-    
+
             Toast.show({
                 type: 'error',
                 text1: 'Erro ao finalizar auditoria',
@@ -178,6 +211,7 @@ export const ProdutoScan = () => {
         <TouchableOpacity style={styles.itemContainer} onPress={() => handlePress(item)}>
             <Text style={styles.itemText}>Romaneio: {item.romaneio}</Text>
             <Text style={styles.itemText}>Código do Produto: {item.codProduto}</Text>
+            <Text style={styles.itemText}>EAN: {item.eanProduto}</Text>
             <Text style={styles.itemText}>Descrição: {item.descricao}</Text>
             <Text style={styles.itemText}>Embalagem: {item.emb}</Text>
             <Text style={styles.itemTextWrong}>Quantidade Auditada: {item.qtdAuditada == null ? '0' : item.qtdAuditada}</Text>
@@ -223,20 +257,28 @@ export const ProdutoScan = () => {
                                         textAlign: 'center',
                                         fontSize: 16,
                                         marginBottom: 10,
-                                        padding:10,
+                                        padding: 10,
                                         backgroundColor: '#222',
                                         borderRadius: 10,
                                         color: '#fff'
                                     }}>
                                         Quantidade de tentativas: {selectedItem.qtdTentativa}
-                                    </Text> 
+                                    </Text>
                                     <Text style={{
                                         textAlign: 'center',
                                         fontSize: 16,
-                                        marginTop:5,
+                                        marginTop: 5,
                                         marginBottom: 10
                                     }}>
                                         Código do produto: {selectedItem.codProduto}
+                                    </Text>
+                                    <Text style={{
+                                        textAlign: 'center',
+                                        fontSize: 16,
+                                        marginTop: 5,
+                                        marginBottom: 10
+                                    }}>
+                                        EAN: {selectedItem.eanProduto}
                                     </Text>
                                     <Divider />
                                     <Text style={{ textAlign: 'center', fontSize: 16, marginBottom: 10, marginTop: 10 }}>Item: {selectedItem.descricao}</Text>
@@ -255,47 +297,47 @@ export const ProdutoScan = () => {
                                         keyboardType="number-pad"
                                         placeholderTextColor={'#333'}
                                     />
-                                   <View style={{alignItems: 'center',flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 10, marginTop: 50}}>
-                                    <TouchableOpacity
-                                         onPress={() =>
-                                            selectedItem.qtdTentativa < 4 ? updateReconferir(selectedItem.id, parseInt(manualProduto), selectedItem.codBarrasIu)
-                                                : Alert.alert("Error", "Quantidade Excedida")
-                                        }
-                                        style={{
-                                            backgroundColor: '#D7DF23',
-                                            padding: 20,
-                                            alignSelf: 'center',
-                                            borderRadius: 4,
-                                            width: '45%'
-                                        }}>
-                                        <Text
+                                    <View style={{ alignItems: 'center', flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 10, marginTop: 50 }}>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                selectedItem.qtdTentativa < 4 ? updateReconferir(selectedItem.id, parseInt(manualProduto), selectedItem.codBarrasIu)
+                                                    : Alert.alert("Error", "Quantidade Excedida")
+                                            }
                                             style={{
-                                                textAlign: 'center',
-                                                fontSize: 14,
-                                                color: '#202020'
+                                                backgroundColor: '#D7DF23',
+                                                padding: 20,
+                                                alignSelf: 'center',
+                                                borderRadius: 4,
+                                                width: '45%'
                                             }}>
-                                            Enviar
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => setModalVisible(false)}
-                                        style={{
-                                            backgroundColor: '#cd0914',
-                                            padding: 20,
-                                            alignSelf: 'center',
-                                            borderRadius: 4,
-                                            width: '45%'
-                                        }}>
-                                        <Text
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 14,
+                                                    color: '#202020'
+                                                }}>
+                                                Enviar
+                                            </Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => setModalVisible(false)}
                                             style={{
-                                                textAlign: 'center',
-                                                fontSize: 14,
-                                                color: '#fff'
+                                                backgroundColor: '#cd0914',
+                                                padding: 20,
+                                                alignSelf: 'center',
+                                                borderRadius: 4,
+                                                width: '45%'
                                             }}>
-                                            Fechar
-                                        </Text>
-                                    </TouchableOpacity>
-                                   </View>
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 14,
+                                                    color: '#fff'
+                                                }}>
+                                                Fechar
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             </View>
                         </Modal>
@@ -318,14 +360,14 @@ export const ProdutoScan = () => {
                     {!loadingFlatlist ? (
                         <ActivityIndicator size="large" color="#2294ff" />
                     ) : renderList()}
-                    
+
                 </View>
             </View>
         </Modal>
     );
 
     const renderList = () => {
-        if(dadosFiltrados.length > 0) {
+        if (dadosFiltrados.length > 0) {
             return (<FlatList
                 data={dadosFiltrados}
                 renderItem={renderItem}
@@ -334,7 +376,7 @@ export const ProdutoScan = () => {
         } else {
             Alert.alert("Processe", "Auditoria finalizada")
             setModalConfirmacao(false)
-            navigation.navigate('HomeAuditoria')
+            navigation.navigate('Auditoria')
         }
     }
 
@@ -342,7 +384,7 @@ export const ProdutoScan = () => {
         item: number,
         productName: string,
         codBarraIu: string,
-        qtdAuditAnt: number,
+        ean: string,
         codProduto: string) => (
         <Modal
             animationType="slide"
@@ -356,6 +398,7 @@ export const ProdutoScan = () => {
                     <View style={styles.modalContainer}>
                         <Text style={{ textAlign: 'center', fontWeight: '500' }}>{productName}</Text>
                         <Text style={{ textAlign: 'center' }}>Cod:{codProduto}</Text>
+                        <Text style={{ textAlign: 'center' }}>EAN:{ean}</Text>
                         <TextInput
                             style={{
                                 padding: 20,
@@ -375,7 +418,7 @@ export const ProdutoScan = () => {
                                 <Button
                                     title="Enviar"
                                     onPress={() => {
-                                        updateAuditoria(item, parseInt(manualProduto), codBarraIu, qtdAuditAnt)
+                                        handleAddOrUpdateAuditoria(item, parseInt(manualProduto), codBarraIu)
                                     }} />
                             </View>
                             <View style={{ width: "50%" }}>
@@ -412,10 +455,10 @@ export const ProdutoScan = () => {
 
     async function sendProdutoScanManual() {
         setCameraStats(false)
-        const foundItem = auditItem.find(item => item.codBarrasIu === manualProduto || item.codProduto === manualProduto);
-        
+        const foundItem = auditItem.find(item => item.codBarrasIu === codProdutoManual || item.codProduto === codProdutoManual);
+
         if (foundItem && foundItem.qtdTentativa < 4) {
-            setManualProduto("")
+            setCodProdutoManual("")
             setCodBarr(foundItem);
 
             // variáveis de controle de fluxo
@@ -424,7 +467,7 @@ export const ProdutoScan = () => {
             setModalInfo(true);
             setLoading(false);
         } else {
-            Alert.alert("Error", "Quantidade Excedida")
+            Alert.alert("Error", "Produto não pertence ao Lote")
             navigation.navigate("ProdutoAuditoria")
         }
     }
@@ -432,7 +475,7 @@ export const ProdutoScan = () => {
     async function handleScan({ data }: BarCodeScannerResult) {
         if (data) {
             const foundItem = auditItem.find(item => item.codBarrasIu === data);
-            if (foundItem.qtdTentativa < 4) {
+            if (foundItem && foundItem.qtdTentativa < 4) {
                 setCodBarr(foundItem);
                 // variáveis de controle de fluxo
                 setLoading(true);
@@ -440,7 +483,7 @@ export const ProdutoScan = () => {
                 setModalInfo(true);
                 setLoading(false);
             } else {
-                Alert.alert("Error", "Quantidade Excedida")
+                Alert.alert("Error", "Produto não pertence ao Lote")
                 navigation.navigate("ProdutoAuditoria")
             }
         } else {
@@ -451,15 +494,8 @@ export const ProdutoScan = () => {
 
     return (
         <View style={styles.container}>
-            {loading && (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#2294ff" />
-                    <Text style={{ color: '#fff' }}>Carregando dados...</Text>
-                </View>
-            )}
-            {cameraStats && (
-               <CameraCodProduto handleScan={handleScan}/>
-            )}
+            {loading && <Loading />}
+            {cameraStats && <CameraCodProduto handleScan={handleScan} />}
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -470,7 +506,7 @@ export const ProdutoScan = () => {
                 <TouchableWithoutFeedback onPress={dismissKeyboard}>
                     <View style={styles.centeredView}>
                         <View style={styles.modalView}>
-                            <Text style={{fontWeight: '600', fontSize: 18, textAlign: 'center'}}>Informe o Código do Produto</Text>
+                            <Text style={{ fontWeight: '600', fontSize: 18, textAlign: 'center' }}>Informe o Código do Produto</Text>
                             <TextInput
                                 style={{
                                     width: '70%',
@@ -483,37 +519,40 @@ export const ProdutoScan = () => {
                                 }}
                                 placeholderTextColor={'#333'}
 
-                                onChangeText={(text) => setManualProduto(text)}
-                                value={manualProduto}
+                                onChangeText={(text) => setCodProdutoManual(text)}
+                                value={codProdutoManual}
                                 placeholder="Digite o código do Produto"
                                 keyboardType="number-pad"
                             />
-                            <View style={{ flexDirection: "row", width: '80%'}}>
-                            <View style={{ width: "50%" }}>
+                            <View style={{ flexDirection: "row", width: '80%' }}>
+                                <View style={{ width: "50%" }}>
                                     <Button
                                         title="Enviar"
                                         onPress={sendProdutoScanManual}
                                     />
                                 </View>
                                 <View style={{ width: "50%" }}>
-                                    <TouchableOpacity 
-                                    style={{
-                                        width: '80%',
-                                        backgroundColor: '#cd0914',
-                                        padding: 20,
-                                        alignSelf: 'center',
-                                        borderRadius: 4,
-                                        marginTop: 50
-                                    }}
-                                    onPress={() => setModalVisibleManual(false)}>
-                                    <Text
+                                    <TouchableOpacity
                                         style={{
-                                            textAlign: 'center',
-                                            fontSize: 14,
-                                            color: '#fff'
+                                            width: '80%',
+                                            backgroundColor: '#cd0914',
+                                            padding: 20,
+                                            alignSelf: 'center',
+                                            borderRadius: 4,
+                                            marginTop: 50
+                                        }}
+                                        onPress={() => {
+                                            setModalVisibleManual(false)
+                                            setCameraStats(true)
                                         }}>
-                                        Fechar
-                                    </Text>
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 14,
+                                                color: '#fff'
+                                            }}>
+                                            Fechar
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -528,6 +567,7 @@ export const ProdutoScan = () => {
                             <TouchableOpacity
                                 onPress={() => {
                                     setModalVisibleManual(true);
+                                    setCameraStats(false)
                                 }}
                                 style={{
                                     width: '80%',
@@ -547,27 +587,27 @@ export const ProdutoScan = () => {
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                        onPress={() => {
-                            navigation.navigate('Auditados')
-                        }}
-                        style={{
-                            width: '80%',
-                            backgroundColor: '#08e92d',
-                            padding: 20,
-                            alignSelf: 'center',
-                            borderRadius: 4,
-                            marginBottom: -35,
-                            marginTop: 40
-                        }}>
-                        <Text style={{
-                            textAlign: 'center',
-                            fontSize: 14,
-                            color: '#fff',
-                            fontWeight: '600'
-                        }}>
-                            Ver últimos auditados
-                        </Text>
-                    </TouchableOpacity>
+                                onPress={() => {
+                                    navigation.navigate('Auditados')
+                                }}
+                                style={{
+                                    width: '80%',
+                                    backgroundColor: '#08e92d',
+                                    padding: 20,
+                                    alignSelf: 'center',
+                                    borderRadius: 4,
+                                    marginBottom: -35,
+                                    marginTop: 40
+                                }}>
+                                <Text style={{
+                                    textAlign: 'center',
+                                    fontSize: 14,
+                                    color: '#fff',
+                                    fontWeight: '600'
+                                }}>
+                                    Ver últimos auditados
+                                </Text>
+                            </TouchableOpacity>
                             <Button
                                 title="Finalizar"
                                 onPress={finalizarAuditoria}
@@ -576,7 +616,7 @@ export const ProdutoScan = () => {
                     </View>
                 </View>
             )}
-            {codBarr && renderModalQTDProduto(codBarr.id, codBarr.descricao, codBarr.codBarrasIu, codBarr.qtdAuditada, codBarr.codProduto)}
+            {codBarr && renderModalQTDProduto(codBarr.id, codBarr.descricao, codBarr.codBarrasIu, codBarr.eanProduto, codBarr.codProduto)}
             {renderModalConfirmacao()}
         </View>
     );
@@ -589,7 +629,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     itemContainer: {
-        backgroundColor: '#f9f9f9',
+        backgroundColor: '#ffffff',
         padding: 16,
         marginBottom: 8,
         borderRadius: 8,
@@ -597,7 +637,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
+        elevation: 3
     },
     modalView: {
         backgroundColor: "white",
@@ -624,12 +664,15 @@ const styles = StyleSheet.create({
     },
     itemText: {
         fontSize: 16,
-        marginBottom: 4,
+        marginBottom: 10,
     },
     itemTextWrong: {
-        fontSize: 16,
+        fontSize: 18,
+        fontWeight: '500',
         marginBottom: 4,
-        color: '#ff0000'
+        color: '#ffffff',
+        backgroundColor: '#ff0000',
+        padding: 10
     },
     camera: {
         flex: 1,

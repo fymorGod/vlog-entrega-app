@@ -5,3 +5,5 @@ export const URL_UPDATE_AUDITADO = "https://staging-potiguar-mcs-logistica-audit
 export const URL_UPDATE_RECONFERIR = 'https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/edit';
 export const URL_GET_DATA_AUDITORIA = 'https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/romaneio?romaneio=';
 
+// Home Auditoria
+export const URL_GET_DATA_BY_ROMANEIO = 'https://staging-potiguar-mcs-logistica-auditoria-api.apotiguar.com.br/api/v1/auditoria/details?romaneio='
