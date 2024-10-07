@@ -4,9 +4,10 @@ import { Text } from "react-native"
 
 interface CameraCodProdutoProps {
     handleScan: (data: BarCodeScannerResult) => void; 
+    title: string
 }
 
-export const CameraCodProduto = ({handleScan}: CameraCodProdutoProps) => {
+export const Camera = ({handleScan, title}: CameraCodProdutoProps) => {
     return (
         <CameraView
             onBarcodeScanned={handleScan}
@@ -24,7 +25,7 @@ export const CameraCodProduto = ({handleScan}: CameraCodProdutoProps) => {
                 fontWeight: '600',
                 color: '#ffffff'
             }}>
-                Scanear Código do Produto
+                {title}
             </Text>
         </CameraView>
     )

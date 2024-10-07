@@ -51,7 +51,6 @@ export function Dash() {
     setLoading(true);
     try {
       const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
         aspect: [4, 3],
         quality: 0.4,
       });

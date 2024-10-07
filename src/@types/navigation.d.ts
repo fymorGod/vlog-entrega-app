@@ -11,6 +11,8 @@ export declare global {
             Menu: undefined;
             ProdutoAuditoria: undefined;
             Auditados: undefined;
+            Inspector: undefined;
+            Inspecao: undefined;
         }
     }
 }

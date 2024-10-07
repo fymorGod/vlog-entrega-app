@@ -21,7 +21,7 @@ import { AuthContext } from "../../context/AuthContext";
 import Toast from "react-native-toast-message";
 import Divider from "../../components/Divider";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { CameraCodProduto } from "../../components/CameraCodProd";
+import { Camera } from "../../components/Camera";
 import { URL_GET_DATA_AUDITORIA, URL_UPDATE_AUDITADO, URL_UPDATE_AUDITORIA, URL_UPDATE_RECONFERIR, URL_VERIFY_QTD_AUDITORIA } from "../../lib/constants";
 import { Loading } from "../../components/Loading";
 
@@ -70,7 +70,8 @@ export const ProdutoScan = () => {
         setCameraStats(false);
         setModalInfo(false);
         setCameraStats(true);
-        setManualProduto("")
+        setManualProduto("");
+      
         setAuditorias(prevAuditorias => {
             const existingIndex = prevAuditorias.findIndex(aud => aud.id === id);
 
@@ -93,7 +94,7 @@ export const ProdutoScan = () => {
             try {
                 await axios.put(URL_UPDATE_AUDITORIA, {
                     id: id,
-                    qtdAuditada: qtdAudit, 
+                    qtdAuditada: qtdAudit,
                     eanProduto: codBarraIu,
                     userLog: user.username
                 });
@@ -120,6 +121,7 @@ export const ProdutoScan = () => {
 
     const updateReconferir = async (id: number, qtdAudit: number, codBarraIu: string) => {
         setCameraStats(false);
+   
         await axios.put(URL_UPDATE_RECONFERIR,
             {
                 id: id,
@@ -241,105 +243,107 @@ export const ProdutoScan = () => {
                             visible={modalVisible}
                             onRequestClose={() => setModalVisible(false)}
                         >
-                            <View style={{
-                                flex: 1,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                backgroundColor: 'rgba(0,0,0,0.5)'
-                            }}>
+                            <TouchableWithoutFeedback onPress={dismissKeyboard}>
                                 <View style={{
-                                    width: 300,
-                                    padding: 20,
-                                    backgroundColor: 'white',
-                                    borderRadius: 10
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: 'rgba(0,0,0,0.5)'
                                 }}>
-                                    <Text style={{
-                                        textAlign: 'center',
-                                        fontSize: 16,
-                                        marginBottom: 10,
-                                        padding: 10,
-                                        backgroundColor: '#222',
-                                        borderRadius: 10,
-                                        color: '#fff'
+                                    <View style={{
+                                        width: 300,
+                                        padding: 20,
+                                        backgroundColor: 'white',
+                                        borderRadius: 10
                                     }}>
-                                        Quantidade de tentativas: {selectedItem.qtdTentativa}
-                                    </Text>
-                                    <Text style={{
-                                        textAlign: 'center',
-                                        fontSize: 16,
-                                        marginTop: 5,
-                                        marginBottom: 10
-                                    }}>
-                                        Código do produto: {selectedItem.codProduto}
-                                    </Text>
-                                    <Text style={{
-                                        textAlign: 'center',
-                                        fontSize: 16,
-                                        marginTop: 5,
-                                        marginBottom: 10
-                                    }}>
-                                        EAN: {selectedItem.eanProduto}
-                                    </Text>
-                                    <Divider />
-                                    <Text style={{ textAlign: 'center', fontSize: 16, marginBottom: 10, marginTop: 10 }}>Item: {selectedItem.descricao}</Text>
-                                    <TextInput
-                                        style={{
-                                            padding: 20,
-                                            borderColor: '#000',
-                                            borderWidth: 1,
+                                        <Text style={{
+                                            textAlign: 'center',
+                                            fontSize: 16,
+                                            marginBottom: 10,
+                                            padding: 10,
+                                            backgroundColor: '#222',
                                             borderRadius: 10,
-                                            marginTop: 10,
-                                            marginBottom: -25,
-                                        }}
-                                        onChangeText={(text) => setManualProduto(text)}
-                                        value={manualProduto}
-                                        placeholder="Quantidade do produto"
-                                        keyboardType="number-pad"
-                                        placeholderTextColor={'#333'}
-                                    />
-                                    <View style={{ alignItems: 'center', flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 10, marginTop: 50 }}>
-                                        <TouchableOpacity
-                                            onPress={() =>
-                                                selectedItem.qtdTentativa < 4 ? updateReconferir(selectedItem.id, parseInt(manualProduto), selectedItem.codBarrasIu)
-                                                    : Alert.alert("Error", "Quantidade Excedida")
-                                            }
+                                            color: '#fff'
+                                        }}>
+                                            Quantidade de tentativas: {selectedItem.qtdTentativa}
+                                        </Text>
+                                        <Text style={{
+                                            textAlign: 'center',
+                                            fontSize: 16,
+                                            marginTop: 5,
+                                            marginBottom: 10
+                                        }}>
+                                            Código do produto: {selectedItem.codProduto}
+                                        </Text>
+                                        <Text style={{
+                                            textAlign: 'center',
+                                            fontSize: 16,
+                                            marginTop: 5,
+                                            marginBottom: 10
+                                        }}>
+                                            EAN: {selectedItem.eanProduto}
+                                        </Text>
+                                        <Divider />
+                                        <Text style={{ textAlign: 'center', fontSize: 16, marginBottom: 10, marginTop: 10 }}>Item: {selectedItem.descricao}</Text>
+                                        <TextInput
                                             style={{
-                                                backgroundColor: '#D7DF23',
                                                 padding: 20,
-                                                alignSelf: 'center',
-                                                borderRadius: 4,
-                                                width: '45%'
-                                            }}>
-                                            <Text
+                                                borderColor: '#000',
+                                                borderWidth: 1,
+                                                borderRadius: 10,
+                                                marginTop: 10,
+                                                marginBottom: -25,
+                                            }}
+                                            onChangeText={(text) => setManualProduto(text)}
+                                            value={manualProduto}
+                                            placeholder="Quantidade do produto"
+                                            keyboardType="number-pad"
+                                            placeholderTextColor={'#333'}
+                                        />
+                                        <View style={{ alignItems: 'center', flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 10, marginTop: 50 }}>
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    selectedItem.qtdTentativa < 4 ? updateReconferir(selectedItem.id, parseInt(manualProduto), selectedItem.codBarrasIu)
+                                                        : Alert.alert("Error", "Quantidade Excedida")
+                                                }
                                                 style={{
-                                                    textAlign: 'center',
-                                                    fontSize: 14,
-                                                    color: '#202020'
+                                                    backgroundColor: '#D7DF23',
+                                                    padding: 20,
+                                                    alignSelf: 'center',
+                                                    borderRadius: 4,
+                                                    width: '45%'
                                                 }}>
-                                                Enviar
-                                            </Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={() => setModalVisible(false)}
-                                            style={{
-                                                backgroundColor: '#cd0914',
-                                                padding: 20,
-                                                alignSelf: 'center',
-                                                borderRadius: 4,
-                                                width: '45%'
-                                            }}>
-                                            <Text
+                                                <Text
+                                                    style={{
+                                                        textAlign: 'center',
+                                                        fontSize: 14,
+                                                        color: '#202020'
+                                                    }}>
+                                                    Enviar
+                                                </Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => setModalVisible(false)}
                                                 style={{
-                                                    textAlign: 'center',
-                                                    fontSize: 14,
-                                                    color: '#fff'
+                                                    backgroundColor: '#cd0914',
+                                                    padding: 20,
+                                                    alignSelf: 'center',
+                                                    borderRadius: 4,
+                                                    width: '45%'
                                                 }}>
-                                                Fechar
-                                            </Text>
-                                        </TouchableOpacity>
+                                                <Text
+                                                    style={{
+                                                        textAlign: 'center',
+                                                        fontSize: 14,
+                                                        color: '#fff'
+                                                    }}>
+                                                    Fechar
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
+                            </TouchableWithoutFeedback>
                         </Modal>
                     )}
                     <Text
@@ -360,7 +364,7 @@ export const ProdutoScan = () => {
                     {!loadingFlatlist ? (
                         <ActivityIndicator size="large" color="#2294ff" />
                     ) : renderList()}
-
+                    <Button title="Finalizar com Problemas" onPress={() => navigation.navigate('Auditoria')} />
                 </View>
             </View>
         </Modal>
@@ -456,16 +460,20 @@ export const ProdutoScan = () => {
     async function sendProdutoScanManual() {
         setCameraStats(false)
         const foundItem = auditItem.find(item => item.codBarrasIu === codProdutoManual || item.codProduto === codProdutoManual);
+        if (foundItem) {
+            if (foundItem.qtdTentativa < 4) {
+                setCodProdutoManual("")
+                setCodBarr(foundItem);
 
-        if (foundItem && foundItem.qtdTentativa < 4) {
-            setCodProdutoManual("")
-            setCodBarr(foundItem);
-
-            // variáveis de controle de fluxo
-            setModalVisibleManual(false)
-            setLoading(true);
-            setModalInfo(true);
-            setLoading(false);
+                // variáveis de controle de fluxo
+                setModalVisibleManual(false)
+                setLoading(true);
+                setModalInfo(true);
+                setLoading(false);
+            } else {
+                Alert.alert("Error", "Quantidade Excedida")
+                navigation.navigate("ProdutoAuditoria")
+            }
         } else {
             Alert.alert("Error", "Produto não pertence ao Lote")
             navigation.navigate("ProdutoAuditoria")
@@ -475,13 +483,18 @@ export const ProdutoScan = () => {
     async function handleScan({ data }: BarCodeScannerResult) {
         if (data) {
             const foundItem = auditItem.find(item => item.codBarrasIu === data);
-            if (foundItem && foundItem.qtdTentativa < 4) {
-                setCodBarr(foundItem);
-                // variáveis de controle de fluxo
-                setLoading(true);
-                setCameraStats(false);
-                setModalInfo(true);
-                setLoading(false);
+            if (foundItem) {
+                if (foundItem.qtdTentativa < 4) {
+                    setCodBarr(foundItem);
+                    // variáveis de controle de fluxo
+                    setLoading(true);
+                    setCameraStats(false);
+                    setModalInfo(true);
+                    setLoading(false);
+                } else {
+                    Alert.alert("Error", "Quantidade Excedida")
+                    navigation.navigate("ProdutoAuditoria")
+                }
             } else {
                 Alert.alert("Error", "Produto não pertence ao Lote")
                 navigation.navigate("ProdutoAuditoria")
@@ -495,7 +508,7 @@ export const ProdutoScan = () => {
     return (
         <View style={styles.container}>
             {loading && <Loading />}
-            {cameraStats && <CameraCodProduto handleScan={handleScan} />}
+            {cameraStats && <Camera handleScan={handleScan} title="Scanear Código do Produto" />}
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -673,12 +686,6 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         backgroundColor: '#ff0000',
         padding: 10
-    },
-    camera: {
-        flex: 1,
-        width: "100%",
-        justifyContent: 'center',
-        alignItems: 'center'
     },
     loadingContainer: {
         ...StyleSheet.absoluteFillObject,

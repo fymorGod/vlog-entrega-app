@@ -14,6 +14,8 @@ import { HomeAuditoria } from "./src/screens/HomeAuditoria";
 import { ProdutoScan } from "./src/screens/ProdutoScan";
 import { ProdutoScreen } from "./src/screens/Produto";
 import { Auditados } from "./src/screens/Auditados";
+import { Inspector } from "./src/screens/Inspector";
+import { Inspecao } from "./src/screens/Inspecao";
 
 const Stack = createNativeStackNavigator();
 
@@ -76,6 +78,32 @@ export const Layout = () => {
             <Stack.Screen
               name="Auditoria"
               component={AuditoriaScreen}
+              options={{
+                headerRight: () => (
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+                      <Text style={styles.logoutButtonText}>Sair</Text>
+                    </TouchableOpacity>
+                  </View>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="Inspector"
+              component={Inspector}
+              options={{
+                headerRight: () => (
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+                      <Text style={styles.logoutButtonText}>Sair</Text>
+                    </TouchableOpacity>
+                  </View>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="Inspecao"
+              component={Inspecao}
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>
