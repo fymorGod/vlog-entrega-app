@@ -1,9 +1,6 @@
 import React, { useContext, useEffect, useRef } from "react";
 import {
-  CardInfo,
   Container,
-  TextSpan,
-  TextInfo,
   ToggleCamera,
   CardInfoImages,
   TextInfoImage,
@@ -12,63 +9,65 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
-import * as ImagePicker from 'expo-image-picker';
+
 import axios from "axios";
 import { ButtonCamera } from "../../components/ButtonCameraNFE";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ButtonFinish } from "../../components/ButtonFinish";
 import { AuthContext } from "../../context/AuthContext";
-
 import Toast from 'react-native-toast-message';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { production, staging } from "../../lib/prefix";
+import { CardInfoComponent } from "../../components/CardInfo";
+import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { CameraView, type CameraType } from "expo-camera";
 export function Dash() {
-  const { nfe, user } = useContext(AuthContext)
 
   const [cameraStats, setCameraStats] = useState(false);
 
-  const [imageUris, setImageUris] = useState<string[]>([]);
+
+  const { nfe, user } = useContext(AuthContext)
 
   const [awsImage, setAwsImage] = useState<string>("");
   const [customerId, setCustomerId] = useState<number>(0);
   const [count, setCount] = useState(0);
-
   const [loading, setLoading] = useState<boolean>(false);
-
   const awsImageRef = useRef(awsImage);
-
   const navigation = useNavigation();
 
+  const [imageUris, setImageUris] = useState<string[]>([]);
+
   const openCamera = async () => {
-    setLoading(true);
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        aspect: [4, 3],
-        quality: 0.4,
-      });
+    setCameraStats(true)
+    // const result = await ImagePicker.launchCameraAsync({
+    //   cameraType: ImagePicker.CameraType.back,
+    //   aspect: [1, 1],
+    //   quality: 0.4,
+    // });
+    // if (!result.canceled) {
+    //   setImageUris(prevImage => [...prevImage, result.assets[0].uri]);
+    // }
+  }
 
-      if (!result.canceled && result.assets[0].uri) {
-        const newImageUris = result.assets.map(asset => asset.uri);
+  const cameraRef = useRef(null);
+  const [facing, setFacing] = useState<CameraType>('back');
 
-        setImageUris((prevImage) => [...prevImage, ...newImageUris]);
-      }
-      if (imageUris.length >= 1) {
-        setCameraStats(true)
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Erro ao abrir a câmera:', error);
+  const takePicture = async () => {
+    if (cameraRef.current) {
+        const options = { quality: 1, base64: true, skipProcessing: true };
+        const data = await cameraRef.current.takePictureAsync(options);
+        setImageUris(prevImage => [...prevImage, data.uri]);
+        setCameraStats(false)
     }
   };
-
   const removeImage = (index: number) => {
     const newImageUris = [...imageUris];
     newImageUris.splice(index, 1);
@@ -121,7 +120,7 @@ export function Dash() {
     try {
       const formData = new FormData();
       formData.append('file', image);
-      const response = await axios.post('https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/upload', formData, {
+      const response = await axios.post(`https://${staging}-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/file/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -145,11 +144,10 @@ export function Dash() {
       })
     }
   }
-
   // Send customer to DB 
   const createCustomer = async () => {
     try {
-      const response = await axios.post('https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer', {
+      const response = await axios.post(`https://${staging}-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer`, {
         store: user.storeCode,
         cpf: nfe.clienteE.cpfCliente,
         client: nfe.clienteE.nome,
@@ -184,7 +182,7 @@ export function Dash() {
   const createImageCustomer = async () => {
     try {
 
-      const response = await axios.post('https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/customer-image', {
+      const response = await axios.post(`https://${staging}-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/customer-image`, {
         url: awsImage,
         customerPickupId: customerId
       })
@@ -221,105 +219,138 @@ export function Dash() {
     await handleImageSubmit()
 
   }
-  return (
-    <Container>
-      {loading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text>Aguarde, carregando...</Text>
-        </View>
-      )}
-      <>
-        {(nfe && !loading) ? (
-          <CardInfo>
-            <TextSpan>
-              <TextInfo>CPF: </TextInfo>
-              <Text style={{ fontSize: 18 }}>{nfe?.clienteE.cpfCliente}</Text>
-            </TextSpan>
-            <TextSpan>
-              <TextInfo>Nome: </TextInfo>
-              <Text style={{ fontSize: 18 }}>{nfe?.clienteE.nome}</Text>
-            </TextSpan>
-            <TextSpan>
-              <TextInfo>NFE: </TextInfo>
-              <Text style={{ fontSize: 18 }}>{nfe?.nfe}</Text>
-            </TextSpan>
-            <TextSpan>
-              <TextInfo>Nota Fiscal: </TextInfo>
-              <Text style={{ fontSize: 18 }}>{nfe?.notaFiscal}</Text>
-            </TextSpan>
-            <TextSpan>
-              <TextInfo>Número DAV: </TextInfo>
-              <Text style={{ fontSize: 18 }}>{nfe.numeroDav}</Text>
-            </TextSpan>
-            <TextSpan>
-              <TextInfo>Número Pré-Nota: </TextInfo>
-              <Text style={{ fontSize: 18 }}>{nfe?.numeroPreNota}</Text>
-            </TextSpan>
-          </CardInfo>
-        ) : null
-        }
-        {
-          !loading && (
-            <>
-              <CardInfoImages>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text>Fotos capturadas</Text>
-                  <TextInfoImage>{imageUris.length}/10</TextInfoImage>
-                </View>
 
-                <FlatList
-                  horizontal
-                  keyExtractor={(item, index) => index.toString()}
-                  data={imageUris}
-                  renderItem={({ item, index }) => (
-                    <View style={{ width: 100, position: 'relative' }}>
-                      <Image source={{ uri: item }} style={styles.image} />
-                      {index >= 2 && (
-                        <TouchableOpacity
-                          style={styles.deleteIcon}
-                          onPress={() => removeImage(index)}
-                        >
-                          <Ionicons name="trash" size={24} color="white" style={{ marginRight: 10 }} />
-                        </TouchableOpacity>
-                      )}
+  const renderImages = () => {
+    return imageUris.map((uri, index) => (
+      <View style={{ width: 100, position: 'relative' }} key={index}>
+        <Image
+          source={{ uri }}
+          style={styles.image}
+        />
+        {index >= 2 && (
+          <TouchableOpacity
+            style={styles.deleteIcon}
+            onPress={() => removeImage(index)}
+          >
+            <Ionicons name="trash" size={24} color="white" style={{ marginRight: 10 }} />
+          </TouchableOpacity>
+        )}
+      </View>
+    ));
+  };
+
+  return (
+    <>
+       {
+        cameraStats ?  <CameraView style={{ flex: 1, width: '100%' }}  facing={facing} ref={cameraRef} pictureSize={"1920x1080"} >
+        <View
+              style={{
+                  width: "100%",
+                  height: 200,
+                  position: 'absolute',
+                  bottom: 0,
+                  alignItems: 'center',
+                  backgroundColor: 'transparent',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 40
+              }}> 
+              <TouchableOpacity onPress={takePicture} style={{borderWidth: 2, borderColor: "#04ff26",backgroundColor: '#fff', height: 80, width: 80, borderRadius: 80, alignItems: 'center', justifyContent: 'center'}}>
+                <Ionicons name="camera" size={35} color="black" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setCameraStats(false)} style={{borderWidth: 2, borderColor: "#fff", backgroundColor: '#5ea9ff', height: 80, width: 80, borderRadius: 80, alignItems: 'center', justifyContent: 'center'}}>
+                <Text style={{color: '#ffffff', textAlign: 'center', fontWeight: '500', fontSize: 18}}>Voltar</Text>
+              </TouchableOpacity>
+          </View>
+        </CameraView>
+        :  <Container>
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text>Aguarde, carregando...</Text>
+          </View>
+        )}
+       
+        <>
+          {nfe && <CardInfoComponent />}
+          
+                <CardInfoImages>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text>Fotos capturadas</Text>
+                    <TextInfoImage>{imageUris.length}/10</TextInfoImage>
+                  </View>
+  
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.container}
+                  >
+                    {renderImages()}
+                  </ScrollView>
+                </CardInfoImages>
+               
+                
+                <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
+                  
+                  <ToggleCamera>
+                    <ButtonCamera icon="camera" title="Canhoto da NF-E" onPress={() => {
+                      if (imageUris.length == 10) {
+                        return Alert.alert("Alerta", "Limite de Imagens")
+                      } 
+                      openCamera()
+                    }} disabled={imageUris.length >= 1}/>
+                  </ToggleCamera>
+                  <ToggleCamera>
+                    <ButtonCamera icon="camera" title="Foto do Produto" onPress={() => {
+                       if (imageUris.length == 10) {
+                        return Alert.alert("Alerta", "Limite de Imagens")
+                      } 
+                      openCamera()
+                    }} disabled={imageUris.length < 1} />
+                  </ToggleCamera>
+  
+                  {imageUris.length >= 2 && (
+                    <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <ToggleCamera>
+                        <ButtonFinish icon="export" title="Finalize" onPress={finishOperation} disabled={imageUris.length < 1} />
+                      </ToggleCamera>
                     </View>
                   )}
-                  contentContainerStyle={styles.imagesContainer}
-                  showsHorizontalScrollIndicator={false}
-                />
-
-              </CardInfoImages>
-              <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center' }}>
-                <ToggleCamera>
-                  <ButtonCamera icon="camera" title="Canhoto da NF-E" onPress={() => openCamera()} disabled={imageUris.length >= 1} />
-                </ToggleCamera>
-                <ToggleCamera>
-                  <ButtonCamera icon="camera" title="Foto do Produto" onPress={() => openCamera()} disabled={imageUris.length < 1} />
-                </ToggleCamera>
-
-                {cameraStats && (
-                  <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <ToggleCamera>
-                      <ButtonFinish icon="export" title="Finalize" onPress={finishOperation} disabled={imageUris.length < 1} />
-                    </ToggleCamera>
-                  </View>
-                )}
-
-              </View>
-            </>
-          )
-        }
-      </>
-    </Container>
+  
+                </View>
+             
+        </>
+      </Container>
+      }
+    </>
+   
   );
 }
 
 const styles = StyleSheet.create({
+   container: {
+    gap: 10,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
+  },
   cameraContainer: {
     flex: 1,
     paddingBottom: 20,
     backgroundColor: "black",
+  },
+  loading: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.5)'  // Fundo levemente branco para destaque
   },
   scrollView: {
     flex: 1,

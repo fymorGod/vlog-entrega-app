@@ -89,7 +89,7 @@ export const Layout = () => {
               }}
             />
             <Stack.Screen
-              name="Inspector"
+              name="Inspetor"
               component={Inspector}
               options={{
                 headerRight: () => (

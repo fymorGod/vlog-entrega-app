@@ -24,7 +24,7 @@ export const ContainerForm = styled.View`
 
 export const TextSpan = styled.Text`
     font-size: 12px;
-    margin-left: 40px;
+    margin-left: 15px;
     margin-top: -10px;
     margin-bottom: 20px;
     font-weight: 300;

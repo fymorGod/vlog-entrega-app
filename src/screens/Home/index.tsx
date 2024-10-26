@@ -5,6 +5,7 @@ import {
   Modal,
   StyleSheet,
   Text,
+  TextInput,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -16,8 +17,9 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import Toast from "react-native-toast-message";
+import { production, staging } from "../../lib/prefix";
 
-export const URL_VALIDATE_DATA_SCANNER = "https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?";
+export const URL_VALIDATE_DATA_SCANNER = `https://${staging}-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/nfe/data-consumer?`;
 
 export function Home() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -65,7 +67,7 @@ export function Home() {
 
   const validateStatus = async (barCode: string) => {
 
-    const response = await fetch(`https://production-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/find-customer-by-key?keyNf=${barCode}`, {
+    const response = await fetch(`https://${staging}-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/find-customer-by-key?keyNf=${barCode}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -181,6 +183,7 @@ export function Home() {
                 title="Digitar Nota"
                 onPress={() => {
                   setModalVisible(true);
+                  setCameraStats(false)
                 }}
               />
             </View>
@@ -200,11 +203,22 @@ export function Home() {
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Input
-                icon="search"
+            <Text style={{ fontWeight: '600', fontSize: 18, textAlign: 'center' }}>Informe a Nota fiscal</Text>
+              <TextInput
+                style={{
+                  width: '80%',
+                  padding: 20,
+                  borderColor: '#222',
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  marginTop: 10,
+                  marginBottom: -25
+                }}
+                placeholderTextColor={'#333'}
                 onChangeText={(text) => setManualEntryValue(text)}
                 value={manualEntryValue}
                 placeholder="Preencha com a NF-E"
+                keyboardType="number-pad"
               />
               <View style={{ flexDirection: "row" }}>
                 <View style={{ width: "50%" }}>
@@ -215,6 +229,7 @@ export function Home() {
                     title="Fechar"
                     onPress={() => {
                       setModalVisible(false);
+                      setCameraStats(true)
                     }}
                   />
                 </View>
@@ -268,13 +283,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
-      width: 0,
-      height: 2,
+        width: 0,
+        height: 2,
     },
+    height: 240,
+    width: '100%',
+    justifyContent: 'center',
+    alignContent: 'center',
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-  },
+},
   input: {
     height: 40,
     width: "100%",

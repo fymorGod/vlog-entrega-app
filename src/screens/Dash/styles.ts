@@ -13,11 +13,11 @@ export const CardInfo = styled.View`
     width: 100%;
     height: 260px;
     margin: 0 auto;
-    padding: 10px 10px;
-    background-color: #f2f2f2;
+    padding: 20px 10px;
+    background-color: #f4f2f2;
     border-bottom-right-radius: 30px;
     border-bottom-left-radius: 30px;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, .05);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, .1);
     flex-direction: column;
     align-items: start;
 `
@@ -41,7 +41,6 @@ export const CardInfoImages = styled.View`
 
 export const TextSpan = styled.View`
     width: 80%;
-    margin-left: 20px;
     margin-top: 10px;
     flex-direction: row; 
     align-items: center;

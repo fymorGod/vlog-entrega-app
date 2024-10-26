@@ -16,15 +16,15 @@
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
     "axios": "^1.7.2",
-    "expo": "~51.0.22",
+    "expo": "~51.0.38",
     "expo-application": "~5.9.1",
     "expo-barcode-scanner": "~13.0.1",
     "expo-blur": "~13.0.2",
     "expo-camera": "~15.0.14",
     "expo-file-system": "~17.0.1",
+    "expo-image-manipulator": "~12.0.5",
     "expo-image-picker": "~15.0.7",
     "expo-linear-gradient": "~13.0.2",
-    "expo-media-library": "~16.0.4",
     "expo-secure-store": "~13.0.2",
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
@@ -41,8 +41,7 @@
     "react-native-worklets-core": "^1.1.1",
     "styled-components": "^6.1.8",
     "zod": "^3.23.8",
-    "zustand": "^5.0.0-rc.2",
-    "expo-image-manipulator": "~12.0.5"
+    "zustand": "^5.0.0-rc.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

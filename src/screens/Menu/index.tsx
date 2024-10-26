@@ -32,7 +32,7 @@ export const Menu = () => {
                 <LinearGradient colors={['#cd0914', '#871015']} style={styles.gradient}>
                     <TouchableOpacity style={styles.block} onPress={() => {
                             if (user.permission.admin === 1) {
-                                navigation.navigate('Inspector')
+                                navigation.navigate('Inspetor')
                             } else {
                                 Alert.alert("Sem permissão de Acesso!")
                             }
