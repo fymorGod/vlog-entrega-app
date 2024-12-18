@@ -76,56 +76,64 @@ export function Home() {
 
     if (response.ok) {
       const data = await response.json();
+      
       return data
     } else {
       console.error('Erro ao buscar cliente por chave:', response.statusText)
     }
   }
-
   const sendNfe = async (scannerNotaFiscal: string) => {
-    try {
-      const status = await validateStatus(scannerNotaFiscal)
-      console.log(status)
-      if (status.length == 0) {
-        const res = await axios.get(URL_VALIDATE_DATA_SCANNER + `chaveAcesso=${scannerNotaFiscal}&unidadeIE=${storeCode}`)
-        if (res.status == 200 && res.data.length > 0) {
-          setNfe(res.data[0]);
-          setLoading(false);
-          setCameraStats(true);
-          Toast.show({
-            type: 'success',
-            text1: 'NFE pronta para cadastro',
-            text1Style: {
-              alignContent: "center"
-            },
-            visibilityTime: 5000
-          });
-          navigation.navigate("Dash")
-        } else {
-          setCameraStats(false)
-          Toast.show({
-            type: 'error',
-            text1: 'Error na leitura!',
-            visibilityTime: 5000
-          });
 
-          navigation.navigate("ScannerNFe")
-        }
-      } else {
-        setCameraStats(false)
+    const status = await validateStatus(scannerNotaFiscal);
+
+    if (status.length === 0) {
+      let currentStoreCode = storeCode; 
+      let response = await axios.get(
+        `${URL_VALIDATE_DATA_SCANNER}chaveAcesso=${scannerNotaFiscal}&unidadeIE=${currentStoreCode}`
+      );
+
+      if (currentStoreCode == "109" && response.status === 200 && response.data.length === 0) {
+        currentStoreCode = "309";
+        response = await axios.get(
+          `${URL_VALIDATE_DATA_SCANNER}chaveAcesso=${scannerNotaFiscal}&unidadeIE=${currentStoreCode}`
+        );
+      }
+     
+      if (response.status === 200 && response.data.length > 0) {
+        setNfe(response.data[0]);
+        setLoading(false);
+        setCameraStats(true);
+
         Toast.show({
-          type: 'error',
-          text1: 'NFE já cadastrada no sistema.',
-          visibilityTime: 5000
+          type: 'success',
+          text1: 'NFE pronta para cadastro',
+          text1Style: {
+            alignContent: 'center',
+          },
+          visibilityTime: 5000,
         });
 
-        navigation.navigate("ScannerNFe")
-      }
+        navigation.navigate('Dash');
+      } else {
+        setLoading(false);
+        setCameraStats(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Erro na leitura!',
+          visibilityTime: 5000,
+        });
 
-    } catch (error) {
-      console.log(error)
+        navigation.navigate('ScannerNFe');
+      }
+    } else {
+      setCameraStats(false);
+      Toast.show({
+        type: 'error',
+        text1: 'Erro na leitura!',
+        visibilityTime: 5000,
+      }) 
     }
-  }
+  };
 
   async function handleScan({ data }: BarCodeScannerResult) {
     if (data) {
@@ -151,14 +159,17 @@ export function Home() {
       setModalVisible(false);
     }
   }
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0a0a0a" />
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
-      {loading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0a0a0a" />
-        </View>
-      )}
+     
       {
         cameraStats ?
           <CameraView
@@ -170,7 +181,7 @@ export function Home() {
           : null
       }
       {
-        loading == false ? <View style={styles.barcodeDataContainer}>
+        loading === false ? <View style={styles.barcodeDataContainer}>
           <View style={styles.buttonContainer}>
             <View style={{ width: "60%", marginLeft: 15 }}>
               <Button

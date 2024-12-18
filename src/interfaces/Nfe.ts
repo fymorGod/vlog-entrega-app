@@ -5,6 +5,7 @@ export interface Nfe {
     nfe: string;
     notaFiscal: number;
     numeroDav: string;
+    serieIu: string;
     numeroPreNota: string;
     romaneio: string;
     status: string | null;

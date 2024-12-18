@@ -1,52 +1,121 @@
-import styled from "styled-components/native";
+import { StyleSheet } from "react-native";
 
-
-export const Container = styled.View`
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    background-color: #fff;
-    align-items: center;
-`
-
-export const CardInfo = styled.View`
-    width: 100%;
-    height: 260px;
-    margin: 0 auto;
-    padding: 20px 10px;
-    background-color: #f4f2f2;
-    border-bottom-right-radius: 30px;
-    border-bottom-left-radius: 30px;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, .1);
-    flex-direction: column;
-    align-items: start;
-`
-export const TextInfo = styled.Text`
-    font-weight: 700;
-    font-size: 18px;
-`
-export const TextInfoImage = styled.Text`
-    font-weight: 500;
-    font-size: 18px;
-    text-align:  right;
-    margin-right: 10px;
-    color: #262626;
-`
-export const CardInfoImages = styled.View`
-    width: 100%;
-    height: 200px;
-    justify-content: center;
-    padding: 10px;
-`
-
-export const TextSpan = styled.View`
-    width: 80%;
-    margin-top: 10px;
-    flex-direction: row; 
-    align-items: center;
-`
-export const ToggleCamera = styled.View`
-    width: 80%;
-    flex-direction: row;
-    margin-bottom: 20px;
-`
+export const styles = StyleSheet.create({
+    container: {
+      gap: 10,
+      alignItems: 'center',
+      paddingVertical: 10,
+    },
+    cardInfoImages: {
+      width: "100%",
+      height: 200,
+      justifyContent: "center",
+      padding: 10,
+    },
+    mainContainer: {
+      flex: 1,
+      overflow: 'hidden',
+      position: 'relative',
+      backgroundColor: '#fff',
+      alignItems: 'center',
+    },
+    textInfoImage: {
+      fontWeight: '500',
+      fontSize: 18,
+      textAlign:  'right',
+      marginRight: 10,
+      color: '#262626',
+    },
+    textVoltarCamera: {
+      color: '#ffffff', 
+      textAlign: 'center', 
+      fontWeight: '500', 
+      fontSize: 18
+    },
+    cameraStyle: {
+      width: "100%",
+      height: 200,
+      position: 'absolute',
+      bottom: 0,
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 40
+    },
+    iconCamera: {
+      borderWidth: 2,
+      borderColor: "#04ff26", 
+      backgroundColor: '#fff',
+      height: 80, 
+      width: 80, 
+      borderRadius: 80, 
+      alignItems: 'center', 
+      justifyContent: 'center'
+    },
+    iconVoltarCamera: {
+      borderWidth: 2, 
+      borderColor: "#fff", 
+      backgroundColor: '#5ea9ff', 
+      height: 80, 
+      width: 80, 
+      borderRadius: 80, 
+      alignItems: 'center', 
+      justifyContent: 'center'
+    },
+    message: {
+      textAlign: 'center',
+      paddingBottom: 10,
+    },
+    cameraContainer: {
+      flex: 1,
+      paddingBottom: 20,
+      backgroundColor: "black",
+    },
+    loading: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(255,255,255,0.5)' 
+    },
+    scrollView: {
+      flex: 1,
+      width: '100%',
+    },
+    loadingContainer: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    imagesContainer: {
+      gap: 10,
+      marginTop: 10,
+    },
+    camera: {
+      flex: 1,
+    },
+    deleteIcon: {
+      position: 'absolute',
+      top: 5,
+      right: 5,
+      borderRadius: 50,
+      padding: 5,
+    },
+    image: {
+      width: 100,
+      height: 100,
+      resizeMode: 'cover',
+      marginRight: 10,
+      borderRadius: 10
+    },
+    toggleCamera: {
+      width: "80%",
+      flexDirection: "row",
+      marginBottom: 20
+    }
+  });

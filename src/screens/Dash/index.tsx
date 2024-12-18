@@ -1,10 +1,4 @@
 import React, { useContext, useEffect, useRef } from "react";
-import {
-  Container,
-  ToggleCamera,
-  CardInfoImages,
-  TextInfoImage,
-} from "./styles";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -29,13 +23,11 @@ import { CardInfoComponent } from "../../components/CardInfo";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { CameraView, type CameraType } from "expo-camera";
+import { styles } from "./styles";
 export function Dash() {
 
   const [cameraStats, setCameraStats] = useState(false);
-
-
   const { nfe, user } = useContext(AuthContext)
-
   const [awsImage, setAwsImage] = useState<string>("");
   const [customerId, setCustomerId] = useState<number>(0);
   const [count, setCount] = useState(0);
@@ -62,12 +54,18 @@ export function Dash() {
 
   const takePicture = async () => {
     if (cameraRef.current) {
+      try {
         const options = { quality: 1, base64: true, skipProcessing: true };
         const data = await cameraRef.current.takePictureAsync(options);
         setImageUris(prevImage => [...prevImage, data.uri]);
-        setCameraStats(false)
+        setCameraStats(false); // Certifique-se de voltar à tela anterior
+      } catch (error) {
+        console.log('Erro ao tirar a foto: ', error);
+        setCameraStats(false); // Mesmo que haja erro, a câmera deve ser fechada
+      }
     }
   };
+
   const removeImage = (index: number) => {
     const newImageUris = [...imageUris];
     newImageUris.splice(index, 1);
@@ -83,20 +81,13 @@ export function Dash() {
     }
   }, [awsImage]);
 
-  // Send images to AWS
   const handleImageSubmit = async () => {
     try {
       const currentDate = new Date();
       const promises = imageUris.map(async (uri, index) => {
         const imageName = `photo_${currentDate.getTime()}_${index}.jpg`;
-        const compressedImage = await manipulateAsync(
-          uri,
-          [{ resize: { width: 800 } }],
-          { compress: 0.7, format: SaveFormat.JPEG }
-        );
-
         const imageFile = {
-          uri: compressedImage.uri,
+          uri: uri,
           name: imageName,
           type: 'image/jpeg'
         };
@@ -116,6 +107,7 @@ export function Dash() {
       });
     }
   };
+
   const sendToAwsImages = async (image: any) => {
     try {
       const formData = new FormData();
@@ -128,12 +120,6 @@ export function Dash() {
 
       if (response.status == 200) {
         setAwsImage((prevState) => response.data)
-
-        Toast.show({
-          type: 'success',
-          text1: `Imagens enviadas com sucesso ${response.data}`,
-          visibilityTime: 5000
-        })
       }
     } catch (error) {
       console.log(error)
@@ -144,14 +130,15 @@ export function Dash() {
       })
     }
   }
-  // Send customer to DB 
+
   const createCustomer = async () => {
     try {
-      const response = await axios.post(`https://${staging}-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v1/create-customer`, {
+      const response = await axios.post(`https://${staging}-potiguar-mcs-eportal-retirada-cliente-api.apotiguar.com.br/api/v2/create-customer`, {
         store: user.storeCode,
         cpf: nfe.clienteE.cpfCliente,
         client: nfe.clienteE.nome,
         keyNf: nfe.nfe,
+        serieIe: nfe.serieIu,
         nf: nfe.notaFiscal,
         dav: nfe.numeroDav,
         preNota: nfe.numeroPreNota,
@@ -194,7 +181,6 @@ export function Dash() {
           text1: 'Processo concluído com sucesso',
           visibilityTime: 5000
         });
-        console.log(count)
 
         if (count == imageUris.length) {
           Alert.alert('Processo', 'Finalizado')
@@ -215,10 +201,26 @@ export function Dash() {
   const finishOperation = async () => {
     setLoading(true);
 
-    await createCustomer()
-    await handleImageSubmit()
+    try {
+      await createCustomer();
+      await handleImageSubmit();
+      setLoading(false);
+      Toast.show({
+        type: 'success',
+        text1: 'Operação concluída com sucesso!',
+        visibilityTime: 5000
+      });
 
-  }
+    } catch (error) {
+      setLoading(false);
+      console.error("Erro durante a finalização da operação:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Erro durante a finalização da operação. Tente novamente!',
+        visibilityTime: 5000
+      });
+    }
+  };
 
   const renderImages = () => {
     return imageUris.map((uri, index) => (
@@ -239,148 +241,88 @@ export function Dash() {
     ));
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Aguarde, carregando...</Text>
+      </View>
+    )
+  }
+
+  if (cameraStats) {
+    return (
+      <CameraView style={{ flex: 1, width: '100%' }} facing={facing} ref={cameraRef} pictureSize={"1920x1080"} >
+        <View
+          style={styles.cameraStyle}>
+          <TouchableOpacity onPress={takePicture} style={styles.iconCamera}>
+            <Ionicons name="camera" size={35} color="black" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setCameraStats(false)} style={styles.iconVoltarCamera}>
+            <Text style={styles.textVoltarCamera}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
+      </CameraView>
+    )
+  }
+
   return (
     <>
-       {
-        cameraStats ?  <CameraView style={{ flex: 1, width: '100%' }}  facing={facing} ref={cameraRef} pictureSize={"1920x1080"} >
-        <View
-              style={{
-                  width: "100%",
-                  height: 200,
-                  position: 'absolute',
-                  bottom: 0,
-                  alignItems: 'center',
-                  backgroundColor: 'transparent',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingHorizontal: 40
-              }}> 
-              <TouchableOpacity onPress={takePicture} style={{borderWidth: 2, borderColor: "#04ff26",backgroundColor: '#fff', height: 80, width: 80, borderRadius: 80, alignItems: 'center', justifyContent: 'center'}}>
-                <Ionicons name="camera" size={35} color="black" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setCameraStats(false)} style={{borderWidth: 2, borderColor: "#fff", backgroundColor: '#5ea9ff', height: 80, width: 80, borderRadius: 80, alignItems: 'center', justifyContent: 'center'}}>
-                <Text style={{color: '#ffffff', textAlign: 'center', fontWeight: '500', fontSize: 18}}>Voltar</Text>
-              </TouchableOpacity>
-          </View>
-        </CameraView>
-        :  <Container>
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0000ff" />
-            <Text>Aguarde, carregando...</Text>
-          </View>
-        )}
-       
+      <View style={styles.mainContainer}>
         <>
-          {nfe && <CardInfoComponent />}
-          
-                <CardInfoImages>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text>Fotos capturadas</Text>
-                    <TextInfoImage>{imageUris.length}/10</TextInfoImage>
-                  </View>
-  
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.container}
-                  >
-                    {renderImages()}
-                  </ScrollView>
-                </CardInfoImages>
-               
-                
-                <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
-                  
-                  <ToggleCamera>
-                    <ButtonCamera icon="camera" title="Canhoto da NF-E" onPress={() => {
-                      if (imageUris.length == 10) {
-                        return Alert.alert("Alerta", "Limite de Imagens")
-                      } 
-                      openCamera()
-                    }} disabled={imageUris.length >= 1}/>
-                  </ToggleCamera>
-                  <ToggleCamera>
-                    <ButtonCamera icon="camera" title="Foto do Produto" onPress={() => {
-                       if (imageUris.length == 10) {
-                        return Alert.alert("Alerta", "Limite de Imagens")
-                      } 
-                      openCamera()
-                    }} disabled={imageUris.length < 1} />
-                  </ToggleCamera>
-  
-                  {imageUris.length >= 2 && (
-                    <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <ToggleCamera>
-                        <ButtonFinish icon="export" title="Finalize" onPress={finishOperation} disabled={imageUris.length < 1} />
-                      </ToggleCamera>
-                    </View>
-                  )}
-  
+          {nfe ? <CardInfoComponent /> : null}
+          <View style={styles.cardInfoImages}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text>Fotos capturadas</Text>
+              <Text style={styles.textInfoImage}>{imageUris.length}/10</Text>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.container}
+            >
+              {renderImages()}
+            </ScrollView>
+          </View>
+          <View style={{ width: "100%", flexDirection: 'column', height: 170, alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
+            <View style={styles.toggleCamera}>
+              <ButtonCamera
+                icon="camera"
+                title="Canhoto da NF-E"
+                onPress={() => {
+                  if (imageUris.length == 10) {
+                    return Alert.alert("Alerta", "Limite de Imagens")
+                  }
+                  openCamera()
+                }} disabled={imageUris.length >= 1} />
+            </View>
+
+            <View style={styles.toggleCamera}>
+              <ButtonCamera icon="camera" title="Foto do Produto"
+                onPress={() => {
+                  if (imageUris.length == 10) {
+                    return Alert.alert("Alerta", "Limite de Imagens")
+                  }
+                  openCamera()
+                }} disabled={imageUris.length < 1} />
+            </View>
+
+            {imageUris.length >= 2 ? (
+              <View style={{ width: "100%", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <View style={styles.toggleCamera}>
+                  <ButtonFinish
+                    icon="export" title="Finalize"
+                    disabled={loading || imageUris.length < 2}
+                    onPress={finishOperation} />
                 </View>
-             
+              </View>
+            ) : null}
+
+          </View>
         </>
-      </Container>
-      }
+      </View>
     </>
-   
   );
 }
 
-const styles = StyleSheet.create({
-   container: {
-    gap: 10,
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  message: {
-    textAlign: 'center',
-    paddingBottom: 10,
-  },
-  cameraContainer: {
-    flex: 1,
-    paddingBottom: 20,
-    backgroundColor: "black",
-  },
-  loading: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.5)'  // Fundo levemente branco para destaque
-  },
-  scrollView: {
-    flex: 1,
-    width: '100%',
-  },
-  loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  imagesContainer: {
-    gap: 10,
-    marginTop: 10,
-  },
-  camera: {
-    flex: 1,
-  },
-  deleteIcon: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    borderRadius: 50,
-    padding: 5,
-  },
-  image: {
-    width: 100,
-    height: 100,
-    resizeMode: 'cover',
-    marginRight: 10,
-    borderRadius: 10
-  },
-});

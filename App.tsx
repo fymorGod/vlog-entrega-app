@@ -8,7 +8,7 @@ import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Dash } from "./src/screens/Dash";
 import { InitScanner } from "./src/screens/InitScanner";
 import Toast from 'react-native-toast-message';
-import { Menu } from "./src/screens/Menu";
+import { MenuScreen } from "./src/screens/Menu";
 import { AuditoriaScreen } from "./src/screens/Auditoria";
 import { HomeAuditoria } from "./src/screens/HomeAuditoria";
 import { ProdutoScan } from "./src/screens/ProdutoScan";
@@ -38,7 +38,7 @@ export const Layout = () => {
           <>
             <Stack.Screen
               name="Menu"
-              component={Menu}
+              component={MenuScreen}
               options={{
                 headerRight: () => (
                   <View style={styles.buttonContainer}>

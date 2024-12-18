@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AuthContext } from "../../context/AuthContext";
 
-export const Menu = () => {
+export const MenuScreen = () => {
     const navigation = useNavigation();
     const { user } = useContext(AuthContext);
 

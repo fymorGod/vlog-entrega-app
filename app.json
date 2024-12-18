@@ -2,7 +2,7 @@
   "expo": {
     "name": "vlog-v2-app",
     "slug": "vlog-v2-app",
-    "version": "2.4.10",
+    "version": "2.4.16",
     "platforms": [
       "ios",
       "android",
@@ -21,9 +21,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FC0000"
     },
     "ios": {
       "supportsTablet": true,
@@ -32,7 +32,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FC0000"
       },
       "versionCode": 2,
       "permissions": [
@@ -46,7 +46,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "69400cdb-b8ab-4543-8839-2754363d3403"
+        "projectId": "4900b0be-6234-470d-ad0a-c2c817667468"
       }
     }
   }

@@ -7,6 +7,7 @@ export const initialNfe: Nfe = {
       nome: ""
     },
     nfe: "",
+    serieIe: "",
     notaFiscal: 0,
     numeroDav: "",
     numeroPreNota: "",

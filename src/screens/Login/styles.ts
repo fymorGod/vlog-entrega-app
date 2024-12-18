@@ -23,13 +23,13 @@ export const ContainerForm = styled.View`
 `;
 
 export const TextSpan = styled.Text`
-    font-size: 12px;
-    margin-left: 15px;
+    font-size: 14px;
     margin-top: -10px;
-    margin-bottom: 20px;
     font-weight: 300;
-    font-style: italic;
+    margin-bottom: 20px;
+    margin-left: 40px;
     color: #170E49;
+    font-style: italic;
 `
 
 export const Text = styled.Text`

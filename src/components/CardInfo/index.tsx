@@ -1,8 +1,8 @@
 import { Text } from "react-native"
-import { CardInfo, TextInfo } from "../../screens/Dash/styles"
 import { TextSpan } from "../../screens/Login/styles"
 import { useContext } from "react"
 import { AuthContext } from "../../context/AuthContext"
+import { CardInfo, TextInfo } from "./styles"
 
 export const CardInfoComponent = () => {
     const { nfe } = useContext(AuthContext)
